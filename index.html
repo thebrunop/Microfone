@@ -1,0 +1,3186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0d12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Web Mic Mixer</title>
+<style>
+/* =========================================================================
+   CSS — TEMA ESCURO / EQUIPAMENTO PROFISSIONAL
+   ========================================================================= */
+:root{
+  --bg:#0a0d12; --panel:#12171f; --panel2:#171d27; --line:#232b39;
+  --txt:#e6edf7; --dim:#8b98ad; --accent:#38bdf8;
+  --green:#34d399; --amber:#fbbf24; --red:#f87171; --violet:#a78bfa;
+  --radius:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:radial-gradient(900px 520px at 50% -15%,#16202e 0%,#0a0d12 55%),#0a0d12;
+  color:var(--txt);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:15px; line-height:1.35;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:132px;
+  overscroll-behavior-y:contain;
+  min-height:100vh;
+}
+h1,h2,h3{margin:0;}
+button{font-family:inherit;cursor:pointer;}
+
+/* ---------- TOPBAR ---------- */
+.topbar{
+  padding:12px 12px 10px;
+  background:linear-gradient(180deg,rgba(18,24,34,.95),rgba(10,13,18,.6));
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand h1{font-size:16px;letter-spacing:.16em;font-weight:800;}
+.brand p{margin:2px 0 0;font-size:10.5px;color:var(--dim);letter-spacing:.03em;}
+.logo{font-size:24px;line-height:1;}
+.status{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.chip{
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;
+  padding:5px 10px;border-radius:999px;
+  background:#151b25;border:1px solid var(--line);color:var(--dim);
+  white-space:nowrap;transition:.2s;
+}
+.chip.on{color:#04140d;background:var(--green);border-color:var(--green);}
+.chip.live{color:#04121c;background:var(--accent);border-color:var(--accent);}
+.chip.warn{color:#1c1403;background:var(--amber);border-color:var(--amber);}
+.chip.rec{color:#1c0505;background:var(--red);border-color:var(--red);}
+
+/* ---------- TABS ---------- */
+.tabs{
+  display:flex;gap:6px;overflow-x:auto;
+  padding:9px 12px;position:sticky;top:0;z-index:25;
+  background:rgba(10,13,18,.94);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+  scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{
+  flex:0 0 auto;padding:10px 15px;border-radius:10px;
+  font-size:11.5px;font-weight:800;letter-spacing:.1em;
+  background:#141a24;border:1px solid var(--line);color:var(--dim);
+  transition:.15s;
+}
+.tab.active{background:linear-gradient(180deg,#1d64d8,#12439c);color:#fff;border-color:#2f7bf0;}
+
+/* ---------- LAYOUT ---------- */
+main{padding:12px;max-width:1180px;margin:0 auto;}
+.panel{display:none;}
+.panel.active{display:block;}
+.grid2{display:block;}
+
+/* ---------- CARDS ---------- */
+.card{
+  background:linear-gradient(180deg,#161d28,#111620);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px;margin-bottom:12px;
+  box-shadow:0 8px 22px rgba(0,0,0,.38);
+}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.card-head h2{font-size:11.5px;letter-spacing:.18em;color:#cbd5e1;font-weight:800;}
+.card-sub{font-size:10px;color:var(--dim);letter-spacing:.05em;}
+
+/* ---------- SLIDERS ---------- */
+.row{
+  display:grid;grid-template-columns:74px 1fr 76px;
+  align-items:center;gap:8px;margin:7px 0;
+}
+.row .lbl{
+  font-size:10px;letter-spacing:.07em;color:var(--dim);
+  text-transform:uppercase;font-weight:700;
+}
+.row .val{
+  font-size:12px;text-align:right;font-variant-numeric:tabular-nums;
+  color:var(--accent);font-weight:800;
+}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:38px;background:transparent;margin:0;
+  touch-action:pan-y;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border-radius:8px;
+  background:linear-gradient(180deg,#0c1219,#1b2431);
+  border:1px solid #2b3648;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:30px;height:30px;border-radius:50%;
+  margin-top:-11px;
+  background:radial-gradient(circle at 34% 30%,#bae6fd,#38bdf8 45%,#0369a1 100%);
+  border:2px solid #08111c;
+  box-shadow:0 3px 10px rgba(0,0,0,.65),0 0 0 1px rgba(56,189,248,.25);
+}
+input[type=range]::-moz-range-track{
+  height:10px;border-radius:8px;background:#1b2431;border:1px solid #2b3648;
+}
+input[type=range]::-moz-range-thumb{
+  width:28px;height:28px;border-radius:50%;border:2px solid #08111c;
+  background:radial-gradient(circle at 34% 30%,#bae6fd,#38bdf8 45%,#0369a1 100%);
+  box-shadow:0 3px 10px rgba(0,0,0,.65);
+}
+input[type=range]:disabled{opacity:.35;}
+
+/* ---------- SWITCH ---------- */
+.switch{display:inline-flex;align-items:center;gap:9px;position:relative;}
+.switch input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.switch .track{
+  width:54px;height:30px;border-radius:999px;
+  background:#26303f;border:1px solid #333e52;position:relative;
+  transition:.18s;flex:0 0 auto;
+}
+.switch .track::after{
+  content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;
+  border-radius:50%;background:#8b98ad;transition:.18s;
+}
+.switch input:checked + .track{background:linear-gradient(180deg,#0e7490,#0b5f75);border-color:#22d3ee;}
+.switch input:checked + .track::after{left:27px;background:#e0f2fe;}
+.switch .swlbl{font-size:10.5px;font-weight:800;letter-spacing:.07em;color:var(--dim);}
+.switch input:checked ~ .swlbl{color:var(--accent);}
+
+/* ---------- BUTTONS ---------- */
+.btn{
+  background:#1b2230;border:1px solid #2b3546;color:var(--txt);
+  border-radius:10px;padding:11px 13px;font-size:11.5px;font-weight:800;
+  letter-spacing:.06em;transition:.12s;
+}
+.btn:active{transform:translateY(1px);}
+.btn.primary{background:linear-gradient(180deg,#2b8ef0,#1663c6);border-color:#3b9bff;color:#fff;}
+.btn.on{background:linear-gradient(180deg,#1f9d6b,#137a51);border-color:#2fd39a;color:#eafff6;}
+.btn.warn{background:linear-gradient(180deg,#3a2a12,#2a1e0d);border-color:#7c5a1e;color:#fbbf24;}
+.btn.sm{padding:8px 11px;font-size:10.5px;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.chipbtn{
+  padding:8px 12px;border-radius:9px;font-size:10.5px;font-weight:800;
+  letter-spacing:.05em;background:#161d28;border:1px solid var(--line);color:var(--dim);
+}
+.chipbtn.active{background:#0e7490;border-color:#22d3ee;color:#e0f2fe;}
+
+/* ---------- METERS ---------- */
+.meter{
+  position:relative;height:18px;border-radius:9px;overflow:hidden;
+  background:#080c12;border:1px solid #232c3b;
+}
+.meter.big{height:26px;border-radius:11px;}
+.meter .fill{
+  position:absolute;left:0;top:0;bottom:0;width:0%;
+  background:linear-gradient(90deg,#16a34a 0%,#22c55e 35%,#a3e635 60%,#facc15 78%,#f97316 90%,#ef4444 100%);
+  background-size:var(--mws,100%) 100%;
+  background-repeat:no-repeat;
+  transition:width .045s linear;
+}
+.meter .peak{
+  position:absolute;top:0;bottom:0;width:3px;background:#fff;
+  box-shadow:0 0 6px rgba(255,255,255,.9);left:0%;opacity:0;
+  transition:left .06s linear,opacity .2s;
+}
+.scale{position:relative;height:14px;margin-top:3px;}
+.scale span{
+  position:absolute;transform:translateX(-50%);
+  font-size:8.5px;color:#64748b;font-variant-numeric:tabular-nums;
+}
+.scale span.first{transform:translateX(-100%);}
+.scale span.last{transform:translateX(0);}
+.led{
+  font-size:9.5px;font-weight:900;letter-spacing:.08em;
+  padding:3px 8px;border-radius:6px;background:#1a2130;color:#3d4a5e;
+  border:1px solid #232c3b;transition:.1s;
+}
+.led.on{background:var(--red);color:#180404;border-color:#fca5a5;box-shadow:0 0 12px rgba(248,113,113,.8);}
+
+/* ---------- STATUS TEXT ---------- */
+.statline{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;font-weight:800;letter-spacing:.07em;margin-bottom:8px;
+}
+.badge{
+  padding:4px 10px;border-radius:7px;font-size:10px;font-weight:900;letter-spacing:.08em;
+}
+.badge.closed{background:#1e293b;color:#94a3b8;border:1px solid #334155;}
+.badge.open{background:#064e3b;color:#6ee7b7;border:1px solid #10b981;}
+.badge.off{background:#1e293b;color:#64748b;border:1px solid #334155;}
+
+/* ---------- CANVAS ---------- */
+canvas{
+  display:block;width:100%;border-radius:10px;
+  background:#080c12;border:1px solid var(--line);
+  touch-action:none;
+}
+#eqCanvas{height:200px;}
+#specCanvas{height:170px;}
+
+/* ---------- FEEDBACK LIST ---------- */
+.fblist{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11px;color:var(--dim);margin-top:9px;
+  background:#0b1017;border:1px solid var(--line);border-radius:9px;
+  padding:9px;min-height:52px;max-height:130px;overflow:auto;
+  white-space:pre-wrap;line-height:1.55;
+}
+.fblist .hot{color:var(--amber);font-weight:700;}
+
+/* ---------- INFO ROWS ---------- */
+.info{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:6px 0;border-bottom:1px dashed #1e2735;}
+.info:last-child{border-bottom:none;}
+.info .k{color:var(--dim);letter-spacing:.04em;}
+.info .v{color:var(--txt);font-weight:700;text-align:right;font-variant-numeric:tabular-nums;}
+.ok{color:var(--green)!important;}
+.no{color:var(--red)!important;}
+.mid{color:var(--amber)!important;}
+
+/* ---------- SELECT / INPUT ---------- */
+select,input[type=text]{
+  width:100%;background:#0d131c;color:var(--txt);
+  border:1px solid var(--line);border-radius:10px;
+  padding:11px 12px;font-size:13px;font-family:inherit;
+}
+select:focus,input[type=text]:focus{outline:none;border-color:var(--accent);}
+
+/* ---------- BOTTOM BAR ---------- */
+.bottombar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(14,19,27,.96),rgba(8,11,16,.99));
+  border-top:1px solid var(--line);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.bb-mid{min-width:0;}
+.bb-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:-2px;}
+.bb-row .lbl{font-size:9.5px;letter-spacing:.12em;color:var(--dim);font-weight:800;}
+.bb-row .val{font-size:11px;color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums;}
+.bb-right{width:96px;}
+.bb-right .meter{height:14px;}
+.bb-right .clipm{margin-top:4px;text-align:center;}
+
+/* ---------- OVERLAY ---------- */
+.overlay{
+  position:fixed;inset:0;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  padding:22px;
+  background:radial-gradient(700px 500px at 50% 25%,#16202e 0%,#070a0f 70%),#070a0f;
+  transition:opacity .35s,visibility .35s;
+}
+.overlay.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.ov-card{
+  width:100%;max-width:400px;text-align:center;
+  background:linear-gradient(180deg,#161d28,#111620);
+  border:1px solid var(--line);border-radius:20px;padding:26px 20px;
+  box-shadow:0 24px 60px rgba(0,0,0,.7);
+}
+.ov-logo{font-size:50px;margin-bottom:6px;}
+.ov-card h1{font-size:20px;letter-spacing:.18em;margin-bottom:8px;}
+.ov-card p{font-size:12.5px;color:var(--dim);line-height:1.55;margin:0 0 18px;}
+.btn-start{
+  width:100%;padding:17px;border-radius:14px;border:none;
+  font-size:14px;font-weight:900;letter-spacing:.12em;
+  background:linear-gradient(180deg,#2b8ef0,#1049a0);
+  color:#fff;box-shadow:0 10px 26px rgba(43,142,240,.35);
+}
+.btn-start:active{transform:translateY(1px);}
+.btn-start:disabled{opacity:.6;}
+.ov-hint{font-size:10.5px;color:#5c6a7e;margin-top:14px!important;margin-bottom:0!important;}
+.ov-err{
+  margin-top:14px;padding:11px;border-radius:10px;font-size:11.5px;
+  background:#2a1114;border:1px solid #7f1d1d;color:#fca5a5;
+  text-align:left;display:none;line-height:1.5;
+}
+.ov-err.show{display:block;}
+
+/* ---------- TOAST ---------- */
+.toast{
+  position:fixed;left:50%;bottom:150px;transform:translate(-50%,20px);
+  z-index:90;max-width:88vw;
+  padding:12px 16px;border-radius:12px;
+  background:#1b2432;border:1px solid #334155;color:#e2e8f0;
+  font-size:12px;font-weight:600;text-align:center;
+  opacity:0;pointer-events:none;transition:.25s;
+  box-shadow:0 12px 30px rgba(0,0,0,.6);
+}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+.toast.err{background:#2a1114;border-color:#7f1d1d;color:#fca5a5;}
+.toast.ok{background:#052e26;border-color:#0f766e;color:#6ee7b7;}
+
+/* ---------- RESPONSIVIDADE ---------- */
+@media (max-width:360px){
+  .row{grid-template-columns:62px 1fr 62px;gap:6px;}
+  .brand h1{font-size:14px;}
+  .tab{padding:9px 12px;font-size:11px;}
+}
+@media (min-width:760px){
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;}
+  .grid2 > .card{margin-bottom:0;}
+  .span2{grid-column:1 / -1;}
+  #eqCanvas{height:250px;}
+  #specCanvas{height:210px;}
+  body{font-size:15px;}
+  main{padding:16px;}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .topbar{padding:8px 12px 6px;}
+  .brand p{display:none;}
+  #eqCanvas{height:170px;}
+  #specCanvas{height:140px;}
+  body{padding-bottom:120px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= TOPBAR ======================= -->
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">🎚️</span>
+    <div>
+      <h1>WEB MIC MIXER</h1>
+      <p>Microfone digital · cadeia de processamento em tempo real</p>
+    </div>
+  </div>
+  <div class="status">
+    <span class="chip" id="chipMic">🎤 MIC OFF</span>
+    <span class="chip" id="chipOut">🔵 OUTPUT</span>
+    <span class="chip" id="chipMaster">🔊 -12.0 dB</span>
+    <span class="chip" id="chipCtx">⏸ CONTEXT</span>
+  </div>
+</header>
+
+<!-- ======================= TABS ======================= -->
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-panel="panel-channel">CHANNEL</button>
+  <button class="tab" data-panel="panel-eq">EQ</button>
+  <button class="tab" data-panel="panel-dyn">DINÂMICA</button>
+  <button class="tab" data-panel="panel-analyzer">ANALISADOR</button>
+  <button class="tab" data-panel="panel-system">SISTEMA</button>
+</nav>
+
+<main>
+
+<!-- ============================================================
+     PAINEL: CHANNEL
+     ============================================================ -->
+<section class="panel active" id="panel-channel">
+  <div class="grid2">
+
+    <!-- INPUT -->
+    <div class="card">
+      <div class="card-head">
+        <h2>INPUT</h2>
+        <span class="led" id="inClipLed">CLIP</span>
+      </div>
+      <div class="meter big">
+        <div class="fill" id="inFill"></div>
+        <div class="peak" id="inPeak"></div>
+      </div>
+      <div class="scale">
+        <span class="first" style="left:100%">0</span>
+        <span style="left:95%">-3</span>
+        <span style="left:90%">-6</span>
+        <span style="left:80%">-12</span>
+        <span style="left:70%">-18</span>
+        <span style="left:60%">-24</span>
+        <span style="left:40%">-36</span>
+        <span style="left:20%">-48</span>
+        <span class="last" style="left:0%">-60</span>
+      </div>
+      <div class="btn-row" style="justify-content:space-between;align-items:center;">
+        <button class="btn" id="btnMicMute">MUTE</button>
+        <span class="val" id="inDbTxt" style="font-size:13px;color:var(--accent);font-weight:800;">-60.0 dB</span>
+      </div>
+      <div class="card-sub" style="margin-top:8px;">Medidor de pico/RMS pós-ganho. A barra branca é o Peak Hold.</div>
+    </div>
+
+    <!-- GAIN -->
+    <div class="card">
+      <div class="card-head">
+        <h2>INPUT GAIN</h2>
+        <span class="card-sub" id="gainStateLbl">0.0 dB</span>
+      </div>
+      <div class="row">
+        <label class="lbl" for="sld-gain">GAIN</label>
+        <input type="range" id="sld-gain" data-ctrl="gain">
+        <output class="val" data-out="gain"></output>
+      </div>
+      <div class="card-sub" style="margin:8px 0 4px;">NÍVEL PRÉ / PÓS GANHO</div>
+      <div class="meter" style="height:12px;margin-bottom:4px;">
+        <div class="fill" id="preFill"></div><div class="peak" id="prePeak"></div>
+      </div>
+      <div class="meter" style="height:12px;">
+        <div class="fill" id="postFill"></div><div class="peak" id="postPeak"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn sm" data-action="resetGain">RESET</button>
+      </div>
+    </div>
+
+    <!-- HIGH PASS FILTER -->
+    <div class="card">
+      <div class="card-head">
+        <h2>HIGH PASS FILTER</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="hpfOn">
+          <span class="track"></span>
+          <span class="swlbl">ON</span>
+        </label>
+      </div>
+      <div class="row">
+        <label class="lbl" for="sld-hpfFreq">FREQ</label>
+        <input type="range" id="sld-hpfFreq" data-ctrl="hpfFreq">
+        <output class="val" data-out="hpfFreq"></output>
+      </div>
+      <div class="chips">
+        <button class="chipbtn" data-hpf="80">80 Hz</button>
+        <button class="chipbtn" data-hpf="100">100 Hz</button>
+        <button class="chipbtn" data-hpf="120">120 Hz</button>
+        <button class="chipbtn" data-hpf="150">150 Hz</button>
+      </div>
+      <div class="card-sub" style="margin-top:9px;">Remove ruído de manuseio, vento e proximidade. 80–120 Hz é o ideal para voz.</div>
+    </div>
+
+    <!-- GATE -->
+    <div class="card">
+      <div class="card-head">
+        <h2>GATE</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="gateOn">
+          <span class="track"></span>
+          <span class="swlbl">ON</span>
+        </label>
+      </div>
+      <div class="statline">
+        <span id="gateStatus" class="badge closed">GATE CLOSED</span>
+        <span class="card-sub">GR <b id="gateGrTxt" style="color:var(--amber)">0.0 dB</b></span>
+      </div>
+      <div class="meter" style="height:10px;margin-bottom:8px;">
+        <div class="fill" id="gateGrFill" style="background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div>
+      </div>
+      <div class="row">
+        <label class="lbl" for="sld-gateThreshold">THRESH</label>
+        <input type="range" id="sld-gateThreshold" data-ctrl="gateThreshold">
+        <output class="val" data-out="gateThreshold"></output>
+      </div>
+      <div class="row">
+        <label class="lbl" for="sld-gateAttack">ATTACK</label>
+        <input type="range" id="sld-gateAttack" data-ctrl="gateAttack">
+        <output class="val" data-out="gateAttack"></output>
+      </div>
+      <div class="row">
+        <label class="lbl" for="sld-gateHold">HOLD</label>
+        <input type="range" id="sld-gateHold" data-ctrl="gateHold">
+        <output class="val" data-out="gateHold"></output>
+      </div>
+      <div class="row">
+        <label class="lbl" for="sld-gateRelease">RELEASE</label>
+        <input type="range" id="sld-gateRelease" data-ctrl="gateRelease">
+        <output class="val" data-out="gateRelease"></output>
+      </div>
+      <div class="row">
+        <label class="lbl" for="sld-gateRange">RANGE</label>
+        <input type="range" id="sld-gateRange" data-ctrl="gateRange">
+        <output class="val" data-out="gateRange"></output>
+      </div>
+      <div class="btn-row">
+        <button class="btn sm" data-gatepreset="vocal">VOZ SUAVE</button>
+        <button class="btn sm" data-gatepreset="speech">PALESTRA</button>
+        <button class="btn sm" data-gatepreset="tight">APERTADO</button>
+      </div>
+      <div class="card-sub" style="margin-top:9px;">O HOLD evita cortes artificiais no fim das palavras. Attack curto + hold de 100 ms = fala natural.</div>
+    </div>
+
+    <!-- MIC PROCESSING -->
+    <div class="card span2">
+      <div class="card-head">
+        <h2>PROCESSAMENTO DO MICROFONE</h2>
+        <span class="card-sub">restrições do getUserMedia</span>
+      </div>
+      <div class="statline" style="flex-wrap:wrap;gap:12px;">
+        <label class="switch">
+          <input type="checkbox" data-toggle="echo">
+          <span class="track"></span>
+          <span class="swlbl">ECHO CANCELLATION</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" data-toggle="noise">
+          <span class="track"></span>
+          <span class="swlbl">NOISE SUPPRESSION</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" data-toggle="agc">
+          <span class="track"></span>
+          <span class="swlbl">AUTO GAIN</span>
+        </label>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary sm" data-action="applyMic">APLICAR (REINICIAR MIC)</button>
+      </div>
+      <div class="card-sub" style="margin-top:9px;">
+        Alterar estes itens exige reabrir o fluxo do microfone. O suporte real depende do Android/Chrome —
+        veja o painel SISTEMA. <b>AEC não é 100% garantido</b>: a qualidade depende do processador do aparelho.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     PAINEL: EQ
+     ============================================================ -->
+<section class="panel" id="panel-eq">
+  <div class="grid2">
+
+    <div class="card span2">
+      <div class="card-head">
+        <h2>EQUALIZADOR PARAMÉTRICO — CURVA</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="eqOn">
+          <span class="track"></span>
+          <span class="swlbl">EQ ON</span>
+        </label>
+      </div>
+      <canvas id="eqCanvas"></canvas>
+      <div class="card-sub" style="margin-top:8px;">
+        Toque e arraste um ponto: horizontal = frequência · vertical = ganho.
+      </div>
+      <div class="btn-row">
+        <button class="btn sm" data-action="eqFlat">FLAT</button>
+        <button class="btn sm" data-action="eqReset">RESET</button>
+        <button class="btn sm" data-action="eqResetQ">RESET Q</button>
+      </div>
+      <div style="margin-top:10px;">
+        <select id="eqPresetSelect">
+          <option value="">— PRESET DE EQ —</option>
+          <option value="VOCAL">VOCAL</option>
+          <option value="MALE VOICE">MALE VOICE</option>
+          <option value="FEMALE VOICE">FEMALE VOICE</option>
+          <option value="SPEECH">SPEECH</option>
+          <option value="PREACHING">PREACHING</option>
+          <option value="CHURCH">CHURCH</option>
+          <option value="PRESENTATION">PRESENTATION</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Banda 1 -->
+    <div class="card" data-band="0">
+      <div class="card-head">
+        <h2>LOW</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="eqBand0">
+          <span class="track"></span>
+          <span class="swlbl">ON</span>
+        </label>
+      </div>
+      <div class="row"><label class="lbl">FREQ</label><input type="range" data-ctrl="eqFreq0"><output class="val" data-out="eqFreq0"></output></div>
+      <div class="row"><label class="lbl">GAIN</label><input type="range" data-ctrl="eqGain0"><output class="val" data-out="eqGain0"></output></div>
+      <div class="row"><label class="lbl">Q</label><input type="range" data-ctrl="eqQ0"><output class="val" data-out="eqQ0"></output></div>
+      <div class="card-sub">Shelf de graves — controle de corpo/voz grossa.</div>
+    </div>
+
+    <!-- Banda 2 -->
+    <div class="card" data-band="1">
+      <div class="card-head">
+        <h2>LOW MID</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="eqBand1">
+          <span class="track"></span>
+          <span class="swlbl">ON</span>
+        </label>
+      </div>
+      <div class="row"><label class="lbl">FREQ</label><input type="range" data-ctrl="eqFreq1"><output class="val" data-out="eqFreq1"></output></div>
+      <div class="row"><label class="lbl">GAIN</label><input type="range" data-ctrl="eqGain1"><output class="val" data-out="eqGain1"></output></div>
+      <div class="row"><label class="lbl">Q</label><input type="range" data-ctrl="eqQ1"><output class="val" data-out="eqQ1"></output></div>
+      <div class="card-sub">200–800 Hz — zona de "caixa"/embolamento.</div>
+    </div>
+
+    <!-- Banda 3 -->
+    <div class="card" data-band="2">
+      <div class="card-head">
+        <h2>HIGH MID</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="eqBand2">
+          <span class="track"></span>
+          <span class="swlbl">ON</span>
+        </label>
+      </div>
+      <div class="row"><label class="lbl">FREQ</label><input type="range" data-ctrl="eqFreq2"><output class="val" data-out="eqFreq2"></output></div>
+      <div class="row"><label class="lbl">GAIN</label><input type="range" data-ctrl="eqGain2"><output class="val" data-out="eqGain2"></output></div>
+      <div class="row"><label class="lbl">Q</label><input type="range" data-ctrl="eqQ2"><output class="val" data-out="eqQ2"></output></div>
+      <div class="card-sub">1,5–5 kHz — inteligibilidade e presença da voz.</div>
+    </div>
+
+    <!-- Banda 4 -->
+    <div class="card" data-band="3">
+      <div class="card-head">
+        <h2>HIGH</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="eqBand3">
+          <span class="track"></span>
+          <span class="swlbl">ON</span>
+        </label>
+      </div>
+      <div class="row"><label class="lbl">FREQ</label><input type="range" data-ctrl="eqFreq3"><output class="val" data-out="eqFreq3"></output></div>
+      <div class="row"><label class="lbl">GAIN</label><input type="range" data-ctrl="eqGain3"><output class="val" data-out="eqGain3"></output></div>
+      <div class="row"><label class="lbl">Q</label><input type="range" data-ctrl="eqQ3"><output class="val" data-out="eqQ3"></output></div>
+      <div class="card-sub">6–12 kHz — ar e brilho. Cuidado com sibilância ("S").</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     PAINEL: DINÂMICA
+     ============================================================ -->
+<section class="panel" id="panel-dyn">
+  <div class="grid2">
+
+    <!-- COMPRESSOR -->
+    <div class="card">
+      <div class="card-head">
+        <h2>COMPRESSOR</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="compOn">
+          <span class="track"></span>
+          <span class="swlbl">ON</span>
+        </label>
+      </div>
+      <div class="statline">
+        <span class="card-sub">GAIN REDUCTION</span>
+        <span class="card-sub"><b id="compGrTxt" style="color:var(--amber)">0.0 dB</b></span>
+      </div>
+      <div class="meter" style="height:12px;margin-bottom:10px;">
+        <div class="fill" id="compGrFill" style="background:linear-gradient(90deg,#f97316,#fbbf24)"></div>
+      </div>
+      <div class="row"><label class="lbl">THRESH</label><input type="range" data-ctrl="compThreshold"><output class="val" data-out="compThreshold"></output></div>
+      <div class="row"><label class="lbl">RATIO</label><input type="range" data-ctrl="compRatio"><output class="val" data-out="compRatio"></output></div>
+      <div class="row"><label class="lbl">ATTACK</label><input type="range" data-ctrl="compAttack"><output class="val" data-out="compAttack"></output></div>
+      <div class="row"><label class="lbl">RELEASE</label><input type="range" data-ctrl="compRelease"><output class="val" data-out="compRelease"></output></div>
+      <div class="row"><label class="lbl">MAKEUP</label><input type="range" data-ctrl="compMakeup"><output class="val" data-out="compMakeup"></output></div>
+      <div class="row"><label class="lbl">KNEE</label><input type="range" data-ctrl="compKnee"><output class="val" data-out="compKnee"></output></div>
+      <div class="btn-row">
+        <button class="btn sm" data-comppreset="light">LIGHT VOCAL</button>
+        <button class="btn sm" data-comppreset="speech">SPEECH</button>
+        <button class="btn sm" data-comppreset="preaching">PREACHING</button>
+        <button class="btn sm" data-comppreset="strong">STRONG VOCAL</button>
+      </div>
+    </div>
+
+    <!-- LIMITER + OUTPUT -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <h2>LIMITER</h2>
+          <label class="switch">
+            <input type="checkbox" data-toggle="limOn">
+            <span class="track"></span>
+            <span class="swlbl">ON</span>
+          </label>
+        </div>
+        <div class="statline">
+          <span class="card-sub">REDUÇÃO</span>
+          <span class="card-sub"><b id="limGrTxt" style="color:var(--red)">0.0 dB</b></span>
+        </div>
+        <div class="meter" style="height:12px;margin-bottom:10px;">
+          <div class="fill" id="limGrFill" style="background:linear-gradient(90deg,#ef4444,#f87171)"></div>
+        </div>
+        <div class="row"><label class="lbl">THRESH</label><input type="range" data-ctrl="limThreshold"><output class="val" data-out="limThreshold"></output></div>
+        <div class="row"><label class="lbl">RELEASE</label><input type="range" data-ctrl="limRelease"><output class="val" data-out="limRelease"></output></div>
+        <div class="card-sub" style="margin-top:8px;">
+          Limiter com lookahead de 3 ms (AudioWorklet). Após o limiter existe um estágio de
+          soft-clip de segurança que garante que o sinal nunca ultrapasse 0 dBFS.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>OUTPUT / MASTER</h2>
+          <span class="led" id="outClipLed">CLIP</span>
+        </div>
+        <div class="meter big">
+          <div class="fill" id="outFill"></div>
+          <div class="peak" id="outPeak"></div>
+        </div>
+        <div class="scale">
+          <span class="first" style="left:100%">0</span>
+          <span style="left:95%">-3</span>
+          <span style="left:90%">-6</span>
+          <span style="left:80%">-12</span>
+          <span style="left:70%">-18</span>
+          <span style="left:60%">-24</span>
+          <span style="left:40%">-36</span>
+          <span style="left:20%">-48</span>
+          <span class="last" style="left:0%">-60</span>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <label class="lbl">MASTER</label>
+          <input type="range" data-ctrl="master">
+          <output class="val" data-out="master"></output>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btnMasterMute2">MUTE MASTER</button>
+        </div>
+        <div class="card-sub" style="margin-top:8px;">O nível de saída real depende da caixa Bluetooth e do volume do Android.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     PAINEL: ANALISADOR
+     ============================================================ -->
+<section class="panel" id="panel-analyzer">
+  <div class="grid2">
+
+    <div class="card span2">
+      <div class="card-head">
+        <h2>SPECTRUM ANALYZER</h2>
+        <span class="card-sub">20 Hz – 20 kHz (log)</span>
+      </div>
+      <canvas id="specCanvas"></canvas>
+    </div>
+
+    <div class="card span2">
+      <div class="card-head">
+        <h2>FEEDBACK REDUCTION</h2>
+        <label class="switch">
+          <input type="checkbox" data-toggle="fbOn">
+          <span class="track"></span>
+          <span class="swlbl">ON</span>
+        </label>
+      </div>
+      <div class="card-sub" style="margin-bottom:10px;">
+        Detector de microfonia: analisa a FFT do sinal de entrada, procura picos <b>estreitos e persistentes</b>
+        e insere filtros <b>peaking</b> de profundidade controlada. É conservador de propósito —
+        não deve afetar a fala normal.
+      </div>
+      <div class="row"><label class="lbl">SENSIB.</label><input type="range" data-ctrl="fbSensitivity"><output class="val" data-out="fbSensitivity"></output></div>
+      <div class="row"><label class="lbl">MAX NOTCH</label><input type="range" data-ctrl="fbMaxNotches"><output class="val" data-out="fbMaxNotches"></output></div>
+      <div class="row"><label class="lbl">DEPTH</label><input type="range" data-ctrl="fbDepth"><output class="val" data-out="fbDepth"></output></div>
+      <div class="row"><label class="lbl">Q</label><input type="range" data-ctrl="fbQ"><output class="val" data-out="fbQ"></output></div>
+      <div class="btn-row">
+        <button class="btn sm warn" data-action="fbClear">LIMPAR FILTROS</button>
+      </div>
+      <div class="card-sub" style="margin:10px 0 0;">FEEDBACK FILTERS ATIVOS</div>
+      <div class="fblist" id="fbList">nenhum filtro ativo</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     PAINEL: SISTEMA
+     ============================================================ -->
+<section class="panel" id="panel-system">
+  <div class="grid2">
+
+    <!-- PRESETS -->
+    <div class="card">
+      <div class="card-head"><h2>PRESETS</h2></div>
+      <select id="presetSelect"></select>
+      <div class="btn-row">
+        <button class="btn sm primary" data-action="presetLoad">CARREGAR</button>
+        <button class="btn sm" data-action="presetSave">SALVAR COMO…</button>
+        <button class="btn sm warn" data-action="presetDelete">EXCLUIR</button>
+      </div>
+      <div class="card-sub" style="margin-top:9px;">
+        Salva em localStorage: Gain, HPF, Gate, EQ, Compressor, Limiter, Master e Feedback Reduction.
+      </div>
+    </div>
+
+    <!-- LATENCY -->
+    <div class="card">
+      <div class="card-head"><h2>LATÊNCIA &amp; ÁUDIO</h2></div>
+      <div class="info"><span class="k">Audio Context State</span><span class="v" id="iCtxState">—</span></div>
+      <div class="info"><span class="k">Sample Rate</span><span class="v" id="iSampleRate">—</span></div>
+      <div class="info"><span class="k">Buffer Size (aprox.)</span><span class="v" id="iBuffer">—</span></div>
+      <div class="info"><span class="k">baseLatency</span><span class="v" id="iBaseLat">—</span></div>
+      <div class="info"><span class="k">outputLatency</span><span class="v" id="iOutLat">—</span></div>
+      <div class="info"><span class="k">Latência estimada total</span><span class="v" id="iTotalLat">—</span></div>
+      <div class="statline" style="margin-top:12px;">
+        <label class="switch">
+          <input type="checkbox" data-toggle="lowLatency">
+          <span class="track"></span>
+          <span class="swlbl">LOW LATENCY MODE</span>
+        </label>
+      </div>
+      <div class="card-sub">
+        Requer reiniciar o microfone para aplicar. O Bluetooth adiciona latência própria (100–250 ms)
+        que o app <b>não</b> consegue controlar.
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="card">
+      <div class="card-head"><h2>SETTINGS / DIAGNÓSTICO</h2></div>
+      <div class="info"><span class="k">Microphone Permission</span><span class="v" id="iPerm">—</span></div>
+      <div class="info"><span class="k">Echo Cancellation</span><span class="v" id="iEcho">—</span></div>
+      <div class="info"><span class="k">Noise Suppression</span><span class="v" id="iNoise">—</span></div>
+      <div class="info"><span class="k">Auto Gain Control</span><span class="v" id="iAgc">—</span></div>
+      <div class="info"><span class="k">Mic Sample Rate</span><span class="v" id="iMicSR">—</span></div>
+      <div class="info"><span class="k">Mic Channels</span><span class="v" id="iMicCh">—</span></div>
+      <div class="info"><span class="k">AudioWorklet</span><span class="v" id="iWorklet">—</span></div>
+      <div class="info"><span class="k">Output Device</span><span class="v" id="iOutDev">—</span></div>
+      <div class="info"><span class="k">Browser</span><span class="v" id="iBrowser">—</span></div>
+      <div class="info"><span class="k">Operating System</span><span class="v" id="iOS">—</span></div>
+      <div class="statline" style="margin-top:12px;">
+        <label class="switch">
+          <input type="checkbox" data-toggle="keepAwake">
+          <span class="track"></span>
+          <span class="swlbl">KEEP SCREEN ON</span>
+        </label>
+      </div>
+      <div style="margin-top:10px;">
+        <label class="lbl" style="font-size:10px;letter-spacing:.07em;color:var(--dim);font-weight:700;">OUTPUT DEVICE (quando suportado)</label>
+        <select id="outDeviceSelect" style="margin-top:6px;"><option value="">— automático —</option></select>
+      </div>
+    </div>
+
+    <!-- HELP -->
+    <div class="card">
+      <div class="card-head"><h2>HELP — LIMITAÇÕES REAIS</h2></div>
+      <div class="card-sub" style="line-height:1.65;font-size:11.5px;">
+        <b>Bluetooth:</b> o navegador <u>não</u> controla o Bluetooth. O áudio vai para a saída padrão do
+        Android. Se a caixa estiver pareada, o som sai nela — mas o app não consegue escolher o codec,
+        nem medir/compensar a latência do Bluetooth. Use <i>setSinkId</i> (abaixo) se disponível.<br><br>
+
+        <b>Echo Cancellation:</b> depende do Android/Chrome. Aplicamos a restrição
+        <code>echoCancellation:true</code>, mas o processador pode ser do próprio sistema. Não há garantia
+        de eliminar toda microfonia.<br><br>
+
+        <b>Noise Suppression:</b> idem — é um recurso do sistema operacional, ligado/desligado via
+        restrição. Não há controle de intensidade.<br><br>
+
+        <b>Feedback Reduction:</b> implementação heurística via FFT + filtros peaking. Funciona bem para
+        microfonia tonal sustentada; não é um supressor profissional (que usa deslocamento de frequência
+        e detecção adaptativa por hardware).<br><br>
+
+        <b>Gate:</b> usa AudioWorklet com detector de envelope, hold e release — não corta o início das
+        palavras porque o attack é aplicado na <i>abertura</i> e o hold mantém o gate aberto.<br><br>
+
+        <b>Segurança:</b> um soft-clip após o master garante que nada ultrapasse 0 dBFS. Ainda assim,
+        comece com o master baixo para evitar realimentação.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<!-- ======================= BOTTOM BAR (MASTER) ======================= -->
+<footer class="bottombar">
+  <div>
+    <button class="btn" id="btnMasterMute">MUTE</button>
+  </div>
+  <div class="bb-mid">
+    <div class="bb-row">
+      <span class="lbl">MASTER</span>
+      <span class="val" data-out="master"></span>
+    </div>
+    <input type="range" data-ctrl="master" id="sld-master">
+  </div>
+  <div class="bb-right">
+    <div class="meter">
+      <div class="fill" id="outFill2"></div>
+      <div class="peak" id="outPeak2"></div>
+    </div>
+    <div class="clipm"><span class="led" id="outClipLed2">CLIP</span></div>
+  </div>
+</footer>
+
+<!-- ======================= OVERLAY ======================= -->
+<div class="overlay" id="overlay">
+  <div class="ov-card">
+    <div class="ov-logo">🎚️</div>
+    <h1>WEB MIC MIXER</h1>
+    <p>Transforme este celular em um microfone digital com cadeia de processamento profissional em tempo real.</p>
+    <button class="btn-start" id="btnStart">START MICROPHONE</button>
+    <p class="ov-hint">O navegador solicitará permissão para usar o microfone.</p>
+    <div class="ov-err" id="ovError"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* =========================================================================
+   WEB MIC MIXER — aplicação de arquivo único
+   Seções: UTILS · STATE · WORKLETS · AUDIO ENGINE · UI · ANALYZER · FEEDBACK
+           · PRESETS · SETTINGS · ERROR HANDLING · LOOPS
+   ========================================================================= */
+
+/* =========================================================================
+   1. UTILITÁRIOS
+   ========================================================================= */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+const clamp = (v, a, b) => {
+  v = Number(v);
+  if (!isFinite(v)) return a;
+  return v < a ? a : (v > b ? b : v);
+};
+const dbToLin = db => Math.pow(10, clamp(db, -120, 24) / 20);
+const linToDb = l => 20 * Math.log10(Math.max(Math.abs(l), 1e-7));
+const fmtDb  = v => (v > 0 ? '+' : '') + v.toFixed(1) + ' dB';
+const fmtMs  = v => (v < 10 ? v.toFixed(1) : Math.round(v)) + ' ms';
+const fmtHz  = v => (v >= 1000 ? (v / 1000).toFixed(2).replace(/\.00$/, '') + ' kHz' : Math.round(v) + ' Hz');
+
+/* =========================================================================
+   2. ESTADO GLOBAL
+   ========================================================================= */
+const EQ_TYPES = ['lowshelf', 'peaking', 'peaking', 'highshelf'];
+
+function defaultState() {
+  return {
+    gain: 0,
+    mute: false,
+    hpf: { on: true, freq: 100 },
+    gate: { on: true, threshold: -48, attack: 5, hold: 100, release: 150, range: -60 },
+    eq: {
+      on: true,
+      bands: [
+        { on: true, freq: 120,  gain: 0, q: 0.7 },
+        { on: true, freq: 500,  gain: 0, q: 1.0 },
+        { on: true, freq: 2500, gain: 0, q: 1.0 },
+        { on: true, freq: 8000, gain: 0, q: 0.7 }
+      ]
+    },
+    comp:    { on: true, threshold: -24, ratio: 3, attack: 10, release: 200, makeup: 0, knee: 10 },
+    limiter: { on: true, threshold: -1, release: 50 },
+    master:  { gain: -12, mute: false },
+    fb:      { on: false, sensitivity: 0.5, maxNotches: 4, depth: -9, q: 12 },
+    dsp:     { echo: true, noise: true, agc: false },
+    lowLatency: true,
+    keepAwake: false
+  };
+}
+let state = defaultState();
+
+/* =========================================================================
+   3. AUDIO ENGINE — nós e cadeia de sinal
+   -------------------------------------------------------------------------
+   Cadeia:
+   mic → preAnalyser → inputGain → postAnalyser → HPF → GATE → [12 notch FB]
+       → EQ1..EQ4 → COMPRESSOR → MAKEUP → LIMITER → MASTER → SOFTCLIP
+       → outAnalyser → destination
+   ========================================================================= */
+const AE = {
+  ctx: null,
+  stream: null,
+  track: null,
+  src: null,
+  nodes: {},
+  built: false,
+  running: false,
+  workletOK: false,
+  caps: null,
+  outputDeviceId: ''
+};
+
+const gateUI = { gr: 0, open: false, fallbackOpen: false, fallbackGr: 0 };
+const limUI  = { gr: 0 };
+const compUI = { gr: 0 };
+
+/* -------------------------------------------------------------------------
+   3.1 Código dos AudioWorklets (injetado via Blob — sem arquivos externos)
+   ------------------------------------------------------------------------- */
+const WORKLET_SOURCE = `
+/* ---------------------------------------------------------------
+   GATE PROCESSOR
+   Detector de envelope + histerese por HOLD.
+   O attack é aplicado na ABERTURA e o release no FECHAMENTO,
+   evitando cortes artificiais no início/fim das palavras.
+   --------------------------------------------------------------- */
+class GateProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [
+      { name: 'threshold', defaultValue: -48,    minValue: -100,  maxValue: 0,    automationRate: 'k-rate' },
+      { name: 'attack',    defaultValue: 0.005,  minValue: 0.0001, maxValue: 0.2, automationRate: 'k-rate' },
+      { name: 'hold',      defaultValue: 0.1,    minValue: 0,     maxValue: 0.5,  automationRate: 'k-rate' },
+      { name: 'release',   defaultValue: 0.15,   minValue: 0.005, maxValue: 3,    automationRate: 'k-rate' },
+      { name: 'range',     defaultValue: -60,    minValue: -90,   maxValue: 0,    automationRate: 'k-rate' },
+      { name: 'enabled',   defaultValue: 1,      minValue: 0,     maxValue: 1,    automationRate: 'k-rate' }
+    ];
+  }
+  constructor() {
+    super();
+    this.env = 0;          // envelope linear
+    this.gainLin = 1;      // ganho aplicado (linear)
+    this.holdLeft = 0;     // tempo restante de hold (s)
+    this.open = false;
+    this.frame = 0;
+  }
+  process(inputs, outputs, params) {
+    const output = outputs[0];
+    if (!output || output.length === 0) return true;
+    const n = output[0].length;
+    const input = inputs[0];
+
+    // Sem entrada conectada: silencia e mantém estado neutro
+    if (!input || input.length === 0) {
+      for (let c = 0; c < output.length; c++) output[c].fill(0);
+      this.gainLin = 1; this.open = false;
+      return true;
+    }
+
+    const sr       = sampleRate;
+    const thrLin   = Math.pow(10, params.threshold[0] / 20);
+    const rangeLin = Math.pow(10, params.range[0] / 20);
+    const atk      = params.attack[0];
+    const rel      = params.release[0];
+    const hold     = params.hold[0];
+    const enabled  = params.enabled[0] > 0.5;
+
+    const atkCoef = Math.exp(-1 / (sr * Math.max(atk, 0.0002)));
+    const relCoef = Math.exp(-1 / (sr * Math.max(rel, 0.005)));
+    const detRel  = Math.exp(-1 / (sr * 0.05)); // release do detector ~50 ms
+    const dt      = 1 / sr;
+
+    const chIn  = input.length;
+    const chOut = output.length;
+    let minGain = 1;
+
+    for (let i = 0; i < n; i++) {
+      let peak = 0;
+      for (let c = 0; c < chIn; c++) {
+        const a = Math.abs(input[c][i]);
+        if (a > peak) peak = a;
+      }
+      // Detector de envelope (ataque instantâneo, decay ~50 ms)
+      if (peak > this.env) this.env = peak;
+      else this.env = peak + (this.env - peak) * detRel;
+
+      // Lógica do gate
+      if (enabled) {
+        if (this.env >= thrLin) { this.holdLeft = hold; this.open = true; }
+        else if (this.holdLeft > 0) { this.holdLeft -= dt; }
+        else { this.open = false; }
+      } else {
+        this.open = true;
+      }
+
+      const target = (enabled && !this.open) ? rangeLin : 1;
+
+      if (target > this.gainLin) {
+        // Abrindo → usa ATTACK
+        this.gainLin = target - (target - this.gainLin) * atkCoef;
+      } else {
+        // Fechando → usa RELEASE
+        this.gainLin = target - (target - this.gainLin) * relCoef;
+      }
+      if (this.gainLin < minGain) minGain = this.gainLin;
+
+      for (let c = 0; c < chOut; c++) {
+        const srcCh = input[c < chIn ? c : chIn - 1];
+        output[c][i] = srcCh[i] * this.gainLin;
+      }
+    }
+
+    // Envia gain reduction / estado para a UI (throttle ~30x/s)
+    this.frame++;
+    if (this.frame % 12 === 0) {
+      this.port.postMessage({
+        gr: 20 * Math.log10(Math.max(minGain, 1e-6)),
+        open: this.open
+      });
+    }
+    return true;
+  }
+}
+registerProcessor('gate-processor', GateProcessor);
+
+/* ---------------------------------------------------------------
+   LIMITER PROCESSOR — lookahead de 3 ms
+   A redução é calculada no instante atual e aplicada à amostra
+   atrasada, o que garante que o pico já chegue atenuado.
+   --------------------------------------------------------------- */
+class LimiterProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [
+      { name: 'threshold', defaultValue: -1,   minValue: -40,   maxValue: 0,   automationRate: 'k-rate' },
+      { name: 'release',   defaultValue: 0.05, minValue: 0.005, maxValue: 2,   automationRate: 'k-rate' },
+      { name: 'enabled',   defaultValue: 1,    minValue: 0,     maxValue: 1,   automationRate: 'k-rate' }
+    ];
+  }
+  constructor() {
+    super();
+    this.buf = null;
+    this.idx = 0;
+    this.gain = 1;
+    this.frame = 0;
+    this.look = Math.max(1, Math.round(sampleRate * 0.003)); // 3 ms
+  }
+  process(inputs, outputs, params) {
+    const output = outputs[0];
+    if (!output || output.length === 0) return true;
+    const n = output[0].length;
+    const input = inputs[0];
+    if (!input || input.length === 0) {
+      for (let c = 0; c < output.length; c++) output[c].fill(0);
+      return true;
+    }
+    const chOut = output.length;
+    const chIn  = input.length;
+    const L     = this.look;
+
+    if (!this.buf || this.buf.length !== chOut || this.buf[0].length !== L) {
+      this.buf = [];
+      for (let c = 0; c < chOut; c++) this.buf.push(new Float32Array(L));
+      this.idx = 0;
+    }
+
+    const thr     = Math.pow(10, params.threshold[0] / 20);
+    const enabled = params.enabled[0] > 0.5;
+    const relCoef = Math.exp(-1 / (sampleRate * Math.max(params.release[0], 0.005)));
+    let minGain = 1;
+
+    for (let i = 0; i < n; i++) {
+      let peak = 0;
+      for (let c = 0; c < chIn; c++) {
+        const a = Math.abs(input[c][i]);
+        if (a > peak) peak = a;
+      }
+      let target = 1;
+      if (enabled && peak > thr) target = thr / peak;
+
+      // Attack instantâneo (o lookahead cobre os transientes), release exponencial
+      if (target < this.gain) this.gain = target;
+      else this.gain = target + (this.gain - target) * relCoef;
+      if (this.gain < minGain) minGain = this.gain;
+
+      const g = this.gain;
+      for (let c = 0; c < chOut; c++) {
+        const srcCh = input[c < chIn ? c : chIn - 1];
+        const y = this.buf[c][this.idx];
+        this.buf[c][this.idx] = srcCh[i];
+        output[c][i] = y * g;
+      }
+      this.idx++;
+      if (this.idx >= L) this.idx = 0;
+    }
+
+    this.frame++;
+    if (this.frame % 12 === 0) {
+      this.port.postMessage({ gr: 20 * Math.log10(Math.max(minGain, 1e-6)) });
+    }
+    return true;
+  }
+}
+registerProcessor('limiter-processor', LimiterProcessor);
+`;
+
+/* -------------------------------------------------------------------------
+   3.2 Fallback de gate (ScriptProcessorNode) — usado só se o AudioWorklet
+       não estiver disponível. Mesmo algoritmo, rodando na thread principal.
+   ------------------------------------------------------------------------- */
+function createGateFallback(ctx) {
+  const node = ctx.createScriptProcessor(1024, 1, 1);
+  const st = { env: 0, gain: 1, holdLeft: 0, open: false, frame: 0 };
+  node.onaudioprocess = function (e) {
+    const inp = e.inputBuffer.getChannelData(0);
+    const out = e.outputBuffer.getChannelData(0);
+    const sr = ctx.sampleRate;
+    const p  = state.gate;
+
+    const thrLin   = dbToLin(p.threshold);
+    const rangeLin = dbToLin(p.range);
+    const atkCoef  = Math.exp(-1 / (sr * Math.max(p.attack / 1000, 0.0002)));
+    const relCoef  = Math.exp(-1 / (sr * Math.max(p.release / 1000, 0.005)));
+    const detRel   = Math.exp(-1 / (sr * 0.05));
+    const dt       = 1 / sr;
+    let minG = 1;
+
+    for (let i = 0; i < inp.length; i++) {
+      const a = Math.abs(inp[i]);
+      if (a > st.env) st.env = a; else st.env = a + (st.env - a) * detRel;
+
+      if (p.on) {
+        if (st.env >= thrLin) { st.holdLeft = p.hold / 1000; st.open = true; }
+        else if (st.holdLeft > 0) { st.holdLeft -= dt; }
+        else st.open = false;
+      } else st.open = true;
+
+      const target = (p.on && !st.open) ? rangeLin : 1;
+      if (target > st.gain) st.gain = target - (target - st.gain) * atkCoef;
+      else st.gain = target - (target - st.gain) * relCoef;
+      if (st.gain < minG) minG = st.gain;
+
+      out[i] = inp[i] * st.gain;
+    }
+    st.frame++;
+    if (st.frame % 8 === 0) {
+      gateUI.fallbackGr = linToDb(minG);
+      gateUI.fallbackOpen = st.open;
+    }
+  };
+  return node;
+}
+
+/* -------------------------------------------------------------------------
+   3.3 Curva de soft-clip (última proteção contra clipping digital)
+   ------------------------------------------------------------------------- */
+function makeSoftClipCurve(samples = 4097) {
+  const curve = new Float32Array(samples);
+  const K = 0.95; // abaixo disso é totalmente linear
+  for (let i = 0; i < samples; i++) {
+    const x = (i / (samples - 1)) * 2 - 1;
+    const a = Math.abs(x);
+    if (a <= K) curve[i] = x;
+    else {
+      const s = x < 0 ? -1 : 1;
+      curve[i] = s * (K + (1 - K) * Math.tanh((a - K) / (1 - K)));
+    }
+  }
+  return curve;
+}
+
+/* -------------------------------------------------------------------------
+   3.4 Contexto + carregamento dos worklets
+   ------------------------------------------------------------------------- */
+function createContext() {
+  if (AE.ctx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) throw new AppError('Web Audio API não é suportada neste navegador.');
+  AE.ctx = new AC({
+    latencyHint: state.lowLatency ? 'interactive' : 'playback'
+  });
+}
+
+async function loadWorklets() {
+  if (!AE.ctx.audioWorklet) { AE.workletOK = false; return; }
+  try {
+    const blob = new Blob([WORKLET_SOURCE], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    await AE.ctx.audioWorklet.addModule(url);
+    URL.revokeObjectURL(url);
+    AE.workletOK = true;
+  } catch (err) {
+    console.warn('[WMM] AudioWorklet indisponível:', err);
+    AE.workletOK = false;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   3.5 Construção da cadeia
+   ------------------------------------------------------------------------- */
+function buildGraph() {
+  if (AE.built) return;
+  const ctx = AE.ctx;
+  const N = AE.nodes;
+
+  // Analisadores
+  N.preAnalyser = ctx.createAnalyser();
+  N.preAnalyser.fftSize = 1024;
+  N.preAnalyser.smoothingTimeConstant = 0.2;
+
+  N.postAnalyser = ctx.createAnalyser();
+  N.postAnalyser.fftSize = 4096;
+  N.postAnalyser.smoothingTimeConstant = 0.5;
+
+  N.outAnalyser = ctx.createAnalyser();
+  N.outAnalyser.fftSize = 2048;
+  N.outAnalyser.smoothingTimeConstant = 0.65;
+
+  // Ganho de entrada
+  N.inputGain = ctx.createGain();
+  N.inputGain.gain.value = 1;
+
+  // HPF
+  N.hpf = ctx.createBiquadFilter();
+  N.hpf.type = 'highpass';
+  N.hpf.frequency.value = state.hpf.freq;
+  N.hpf.Q.value = 0.707;
+
+  // Gate
+  if (AE.workletOK) {
+    try {
+      N.gate = new AudioWorkletNode(ctx, 'gate-processor');
+      N.gate.port.onmessage = e => {
+        gateUI.gr = e.data.gr;
+        gateUI.open = e.data.open;
+      };
+    } catch (err) {
+      console.warn('[WMM] Falha ao criar gate worklet, usando fallback:', err);
+      N.gate = createGateFallback(ctx);
+    }
+  } else {
+    N.gate = createGateFallback(ctx);
+  }
+
+  // Banco de filtros de feedback (12 peaking, inicialmente em 0 dB = inativos)
+  N.fb = [];
+  for (let i = 0; i < 12; i++) {
+    const f = ctx.createBiquadFilter();
+    f.type = 'peaking';
+    f.frequency.value = 1000;
+    f.Q.value = state.fb.q;
+    f.gain.value = 0;
+    N.fb.push(f);
+  }
+
+  // EQ de 4 bandas
+  N.eq = [];
+  for (let i = 0; i < 4; i++) {
+    const f = ctx.createBiquadFilter();
+    f.type = EQ_TYPES[i];
+    f.frequency.value = state.eq.bands[i].freq;
+    f.gain.value = 0;
+    f.Q.value = state.eq.bands[i].q;
+    N.eq.push(f);
+  }
+
+  // Compressor + makeup
+  N.comp = ctx.createDynamicsCompressor();
+  N.makeup = ctx.createGain();
+
+  // Limiter
+  if (AE.workletOK) {
+    try {
+      N.limiter = new AudioWorkletNode(ctx, 'limiter-processor');
+      N.limiter.port.onmessage = e => { limUI.gr = e.data.gr; };
+    } catch (err) {
+      console.warn('[WMM] Falha no limiter worklet, usando DynamicsCompressor:', err);
+      N.limiter = makeCompressorLimiter(ctx);
+    }
+  } else {
+    N.limiter = makeCompressorLimiter(ctx);
+  }
+
+  // Master + soft clip + saída
+  N.master = ctx.createGain();
+  N.master.gain.value = 0;
+
+  N.safety = ctx.createWaveShaper();
+  N.safety.curve = makeSoftClipCurve();
+  N.safety.oversample = 'none';
+
+  /* ---------------- Conexões ---------------- */
+  N.preAnalyser.connect(N.inputGain);
+  N.inputGain.connect(N.postAnalyser);
+  N.postAnalyser.connect(N.hpf);
+  N.hpf.connect(N.gate);
+
+  let prev = N.gate;
+  for (const f of N.fb) { prev.connect(f); prev = f; }
+  for (const f of N.eq) { prev.connect(f); prev = f; }
+
+  prev.connect(N.comp);
+  N.comp.connect(N.makeup);
+  N.makeup.connect(N.limiter);
+  N.limiter.connect(N.master);
+  N.master.connect(N.safety);
+  N.safety.connect(N.outAnalyser);
+  N.outAnalyser.connect(ctx.destination);
+
+  AE.built = true;
+}
+
+function makeCompressorLimiter(ctx) {
+  const c = ctx.createDynamicsCompressor();
+  c.ratio.value = 20;
+  c.knee.value = 0;
+  c.attack.value = 0.003;
+  c.release.value = 0.05;
+  c.threshold.value = -1;
+  return c;
+}
+
+/* -------------------------------------------------------------------------
+   3.6 Abertura do microfone
+   ------------------------------------------------------------------------- */
+async function openMic() {
+  // Encerra stream anterior (se houver)
+  if (AE.stream) {
+    AE.stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+    AE.stream = null;
+  }
+
+  const baseConstraints = {
+    echoCancellation: !!state.dsp.echo,
+    noiseSuppression: !!state.dsp.noise,
+    autoGainControl: !!state.dsp.agc,
+    channelCount: { ideal: 1 }
+  };
+
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: baseConstraints, video: false });
+  } catch (err) {
+    // Alguns aparelhos rejeitam restrições específicas — tenta o mais simples possível
+    console.warn('[WMM] Restrições rejeitadas, tentando áudio simples:', err);
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      toast('Restrições de áudio não suportadas — usando o padrão do dispositivo.', 'err');
+    } catch (err2) {
+      throw normalizeMicError(err2);
+    }
+  }
+
+  AE.stream = stream;
+  AE.track = stream.getAudioTracks()[0] || null;
+  readTrackCaps();
+
+  // Cria/reconecta o MediaStreamSource
+  const ctx = AE.ctx;
+  const newSrc = ctx.createMediaStreamSource(stream);
+  if (AE.src) { try { AE.src.disconnect(); } catch (e) {} }
+  AE.src = newSrc;
+  AE.src.connect(AE.nodes.preAnalyser);
+
+  // Monitora fim da faixa (ex.: revogação de permissão)
+  if (AE.track) {
+    AE.track.onended = () => {
+      updateChips();
+      toast('A captura do microfone foi encerrada.', 'err');
+    };
+  }
+  updateSettingsPanel();
+}
+
+function normalizeMicError(err) {
+  const name = err && err.name ? err.name : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError')
+    return new AppError('Permissão de microfone negada. Autorize o microfone nas configurações do Chrome e recarregue a página.');
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError')
+    return new AppError('Nenhum microfone encontrado neste dispositivo.');
+  if (name === 'NotReadableError' || name === 'TrackStartError')
+    return new AppError('O microfone está sendo usado por outro aplicativo. Feche-o e tente novamente.');
+  if (name === 'OverconstrainedError')
+    return new AppError('As restrições de áudio não são suportadas por este microfone.');
+  return new AppError('Não foi possível iniciar o microfone: ' + (err && err.message ? err.message : 'erro desconhecido'));
+}
+
+function readTrackCaps() {
+  const t = AE.track;
+  if (!t) { AE.caps = null; return; }
+  let s = {}, c = {};
+  try { s = t.getSettings ? t.getSettings() : {}; } catch (e) {}
+  try { c = t.getCapabilities ? t.getCapabilities() : {}; } catch (e) {}
+  AE.caps = {
+    echoCancellation: s.echoCancellation,
+    noiseSuppression: s.noiseSuppression,
+    autoGainControl: s.autoGainControl,
+    sampleRate: s.sampleRate,
+    channelCount: s.channelCount,
+    supportsEcho: !!(c && c.echoCancellation && c.echoCancellation.length),
+    supportsNoise: !!(c && c.noiseSuppression && c.noiseSuppression.length),
+    supportsAgc: !!(c && c.autoGainControl && c.autoGainControl.length)
+  };
+}
+
+/* =========================================================================
+   4. APLICAÇÃO DE PARÂMETROS NOS NÓS
+   ========================================================================= */
+function now() { return AE.ctx ? AE.ctx.currentTime : 0; }
+
+function applyGain() {
+  const N = AE.nodes;
+  if (!N.inputGain) return;
+  const g = state.mute ? 0 : dbToLin(clamp(state.gain, -30, 30));
+  N.inputGain.gain.setTargetAtTime(g, now(), 0.015);
+  const lbl = $('#gainStateLbl');
+  if (lbl) lbl.textContent = state.mute ? 'MUTED' : fmtDb(state.gain);
+}
+
+function applyHPF() {
+  const N = AE.nodes;
+  if (!N.hpf) return;
+  const f = state.hpf.on ? clamp(state.hpf.freq, 20, 300) : 20;
+  N.hpf.frequency.setTargetAtTime(f, now(), 0.02);
+  N.hpf.Q.setTargetAtTime(0.707, now(), 0.02);
+  eqDirty = true;
+}
+
+function applyGate() {
+  const N = AE.nodes;
+  if (!N.gate) return;
+  const p = state.gate;
+  if (N.gate.parameters) { // AudioWorkletNode
+    const t = now();
+    N.gate.parameters.get('threshold').setTargetAtTime(clamp(p.threshold, -100, 0), t, 0.02);
+    N.gate.parameters.get('attack').setTargetAtTime(clamp(p.attack / 1000, 0.0001, 0.2), t, 0.02);
+    N.gate.parameters.get('hold').setTargetAtTime(clamp(p.hold / 1000, 0, 0.5), t, 0.02);
+    N.gate.parameters.get('release').setTargetAtTime(clamp(p.release / 1000, 0.005, 3), t, 0.02);
+    N.gate.parameters.get('range').setTargetAtTime(clamp(p.range, -90, 0), t, 0.02);
+    N.gate.parameters.get('enabled').setTargetAtTime(p.on ? 1 : 0, t, 0.02);
+  }
+  // Fallback lê state.gate diretamente em cada bloco
+}
+
+function applyEQ() {
+  const N = AE.nodes;
+  if (!N.eq) return;
+  const t = now();
+  state.eq.bands.forEach((b, i) => {
+    const f = N.eq[i];
+    if (!f) return;
+    f.frequency.setTargetAtTime(clamp(b.freq, 20, 20000), t, 0.02);
+    f.gain.setTargetAtTime(
+      (state.eq.on && b.on) ? clamp(b.gain, -15, 15) : 0,
+      t, 0.02
+    );
+    f.Q.setTargetAtTime(clamp(b.q, 0.1, 20), t, 0.02);
+  });
+  eqDirty = true;
+}
+
+function applyComp() {
+  const N = AE.nodes;
+  if (!N.comp) return;
+  const p = state.comp;
+  const t = now();
+  const on = p.on;
+  N.comp.threshold.setTargetAtTime(on ? clamp(p.threshold, -60, 0) : 0, t, 0.02);
+  N.comp.knee.setTargetAtTime(on ? clamp(p.knee, 0, 40) : 0, t, 0.02);
+  N.comp.ratio.setTargetAtTime(on ? clamp(p.ratio, 1, 20) : 1, t, 0.02);
+  N.comp.attack.setTargetAtTime(on ? clamp(p.attack / 1000, 0.0001, 1) : 0.003, t, 0.02);
+  N.comp.release.setTargetAtTime(clamp(p.release / 1000, 0.01, 2), t, 0.02);
+  if (N.makeup) N.makeup.gain.setTargetAtTime(on ? dbToLin(clamp(p.makeup, 0, 24)) : 1, t, 0.02);
+}
+
+function applyLimiter() {
+  const N = AE.nodes;
+  if (!N.limiter) return;
+  const p = state.limiter;
+  const t = now();
+  if (N.limiter.parameters) { // worklet
+    N.limiter.parameters.get('threshold').setTargetAtTime(clamp(p.threshold, -40, 0), t, 0.02);
+    N.limiter.parameters.get('release').setTargetAtTime(clamp(p.release / 1000, 0.005, 2), t, 0.02);
+    N.limiter.parameters.get('enabled').setTargetAtTime(p.on ? 1 : 0, t, 0.02);
+  } else { // DynamicsCompressor
+    N.limiter.threshold.setTargetAtTime(p.on ? clamp(p.threshold, -60, 0) : 0, t, 0.02);
+    N.limiter.ratio.setTargetAtTime(p.on ? 20 : 1, t, 0.02);
+    N.limiter.knee.setTargetAtTime(0, t, 0.02);
+    N.limiter.attack.setTargetAtTime(0.003, t, 0.02);
+    N.limiter.release.setTargetAtTime(clamp(p.release / 1000, 0.01, 1), t, 0.02);
+  }
+}
+
+function applyMaster() {
+  const N = AE.nodes;
+  if (!N.master) return;
+  const g = state.master.mute ? 0 : dbToLin(clamp(state.master.gain, -60, 6));
+  N.master.gain.setTargetAtTime(g, now(), 0.02);
+}
+
+function applyFB() {
+  const N = AE.nodes;
+  if (!N.fb) return;
+  const t = now();
+  N.fb.forEach((f, i) => {
+    const slot = FB.slots[i];
+    if (!state.fb.on || !slot || !slot.active) {
+      f.gain.setTargetAtTime(0, t, 0.05);
+    } else {
+      f.frequency.setTargetAtTime(clamp(slot.freq, 30, 18000), t, 0.03);
+      f.Q.setTargetAtTime(clamp(state.fb.q, 1, 30), t, 0.05);
+      f.gain.setTargetAtTime(clamp(state.fb.depth, -18, -3), t, 0.05);
+    }
+  });
+}
+
+function applyDSP() { /* aplicado ao reabrir o microfone */ }
+
+function applyAll() {
+  applyGain(); applyHPF(); applyGate(); applyEQ();
+  applyComp(); applyLimiter(); applyMaster(); applyFB();
+}
+
+/* =========================================================================
+   5. CONTROLES — registro genérico (slider → estado → áudio)
+   ========================================================================= */
+const CTRL = {};
+function defCtrl(id, cfg) { CTRL[id] = Object.assign({ inputs: [], outs: [] }, cfg); }
+
+function syncCtrl(id) {
+  const c = CTRL[id];
+  if (!c) return;
+  const v = c.get();
+  c.inputs.forEach(el => { if (parseFloat(el.value) !== v) el.value = v; });
+  c.outs.forEach(el => { el.textContent = c.fmt(v); });
+}
+function syncAll() { Object.keys(CTRL).forEach(syncCtrl); }
+
+/* ---------- Definições de controles ---------- */
+defCtrl('gain', {
+  min: -30, max: 30, step: 0.1,
+  get: () => state.gain,
+  set: v => { state.gain = clamp(v, -30, 30); applyGain(); },
+  fmt: v => fmtDb(v)
+});
+defCtrl('hpfFreq', {
+  min: 20, max: 300, step: 1,
+  get: () => state.hpf.freq,
+  set: v => { state.hpf.freq = clamp(v, 20, 300); applyHPF(); },
+  fmt: v => Math.round(v) + ' Hz'
+});
+defCtrl('gateThreshold', {
+  min: -80, max: 0, step: 1,
+  get: () => state.gate.threshold,
+  set: v => { state.gate.threshold = clamp(v, -80, 0); applyGate(); },
+  fmt: v => Math.round(v) + ' dB'
+});
+defCtrl('gateAttack', {
+  min: 0.1, max: 100, step: 0.1,
+  get: () => state.gate.attack,
+  set: v => { state.gate.attack = clamp(v, 0.1, 100); applyGate(); },
+  fmt: v => fmtMs(v)
+});
+defCtrl('gateHold', {
+  min: 0, max: 500, step: 1,
+  get: () => state.gate.hold,
+  set: v => { state.gate.hold = clamp(v, 0, 500); applyGate(); },
+  fmt: v => Math.round(v) + ' ms'
+});
+defCtrl('gateRelease', {
+  min: 10, max: 2000, step: 1,
+  get: () => state.gate.release,
+  set: v => { state.gate.release = clamp(v, 10, 2000); applyGate(); },
+  fmt: v => Math.round(v) + ' ms'
+});
+defCtrl('gateRange', {
+  min: -80, max: 0, step: 1,
+  get: () => state.gate.range,
+  set: v => { state.gate.range = clamp(v, -80, 0); applyGate(); },
+  fmt: v => Math.round(v) + ' dB'
+});
+
+/* EQ — 4 bandas */
+for (let i = 0; i < 4; i++) {
+  defCtrl('eqFreq' + i, {
+    min: 20, max: 20000, step: 1,
+    get: () => state.eq.bands[i].freq,
+    set: v => { state.eq.bands[i].freq = clamp(v, 20, 20000); applyEQ(); },
+    fmt: v => fmtHz(v)
+  });
+  defCtrl('eqGain' + i, {
+    min: -15, max: 15, step: 0.1,
+    get: () => state.eq.bands[i].gain,
+    set: v => { state.eq.bands[i].gain = clamp(v, -15, 15); applyEQ(); },
+    fmt: v => fmtDb(v)
+  });
+  defCtrl('eqQ' + i, {
+    min: 0.1, max: 20, step: 0.1,
+    get: () => state.eq.bands[i].q,
+    set: v => { state.eq.bands[i].q = clamp(v, 0.1, 20); applyEQ(); },
+    fmt: v => v.toFixed(1)
+  });
+}
+
+defCtrl('compThreshold', {
+  min: -60, max: 0, step: 0.5,
+  get: () => state.comp.threshold,
+  set: v => { state.comp.threshold = clamp(v, -60, 0); applyComp(); },
+  fmt: v => v.toFixed(1) + ' dB'
+});
+defCtrl('compRatio', {
+  min: 1, max: 20, step: 0.1,
+  get: () => state.comp.ratio,
+  set: v => { state.comp.ratio = clamp(v, 1, 20); applyComp(); },
+  fmt: v => v.toFixed(1) + ':1'
+});
+defCtrl('compAttack', {
+  min: 0.1, max: 100, step: 0.1,
+  get: () => state.comp.attack,
+  set: v => { state.comp.attack = clamp(v, 0.1, 100); applyComp(); },
+  fmt: v => fmtMs(v)
+});
+defCtrl('compRelease', {
+  min: 10, max: 2000, step: 1,
+  get: () => state.comp.release,
+  set: v => { state.comp.release = clamp(v, 10, 2000); applyComp(); },
+  fmt: v => Math.round(v) + ' ms'
+});
+defCtrl('compMakeup', {
+  min: 0, max: 24, step: 0.5,
+  get: () => state.comp.makeup,
+  set: v => { state.comp.makeup = clamp(v, 0, 24); applyComp(); },
+  fmt: v => '+' + v.toFixed(1) + ' dB'
+});
+defCtrl('compKnee', {
+  min: 0, max: 40, step: 1,
+  get: () => state.comp.knee,
+  set: v => { state.comp.knee = clamp(v, 0, 40); applyComp(); },
+  fmt: v => Math.round(v) + ' dB'
+});
+
+defCtrl('limThreshold', {
+  min: -30, max: 0, step: 0.1,
+  get: () => state.limiter.threshold,
+  set: v => { state.limiter.threshold = clamp(v, -30, 0); applyLimiter(); },
+  fmt: v => v.toFixed(1) + ' dB'
+});
+defCtrl('limRelease', {
+  min: 10, max: 1000, step: 1,
+  get: () => state.limiter.release,
+  set: v => { state.limiter.release = clamp(v, 10, 1000); applyLimiter(); },
+  fmt: v => Math.round(v) + ' ms'
+});
+
+defCtrl('master', {
+  min: -60, max: 6, step: 0.5,
+  get: () => state.master.gain,
+  set: v => { state.master.gain = clamp(v, -60, 6); applyMaster(); },
+  fmt: v => fmtDb(v)
+});
+
+defCtrl('fbSensitivity', {
+  min: 0, max: 1, step: 0.01,
+  get: () => state.fb.sensitivity,
+  set: v => { state.fb.sensitivity = clamp(v, 0, 1); },
+  fmt: v => Math.round(v * 100) + '%'
+});
+defCtrl('fbMaxNotches', {
+  min: 1, max: 12, step: 1,
+  get: () => state.fb.maxNotches,
+  set: v => { state.fb.maxNotches = clamp(v, 1, 12); FB.trimSlots(); applyFB(); renderFBList(); },
+  fmt: v => Math.round(v)
+});
+defCtrl('fbDepth', {
+  min: -18, max: -3, step: 0.5,
+  get: () => state.fb.depth,
+  set: v => { state.fb.depth = clamp(v, -18, -3); applyFB(); },
+  fmt: v => v.toFixed(1) + ' dB'
+});
+defCtrl('fbQ', {
+  min: 1, max: 30, step: 0.5,
+  get: () => state.fb.q,
+  set: v => { state.fb.q = clamp(v, 1, 30); applyFB(); },
+  fmt: v => v.toFixed(1)
+});
+
+/* =========================================================================
+   6. TOGGLES
+   ========================================================================= */
+const TOGGLES = {};
+function defToggle(id, get, set) { TOGGLES[id] = { get, set }; }
+
+defToggle('hpfOn', () => state.hpf.on, v => { state.hpf.on = v; applyHPF(); });
+defToggle('gateOn', () => state.gate.on, v => { state.gate.on = v; applyGate(); });
+defToggle('eqOn', () => state.eq.on, v => { state.eq.on = v; applyEQ(); });
+for (let i = 0; i < 4; i++) {
+  (function (idx) {
+    defToggle('eqBand' + idx, () => state.eq.bands[idx].on, v => { state.eq.bands[idx].on = v; applyEQ(); });
+  })(i);
+}
+defToggle('compOn', () => state.comp.on, v => { state.comp.on = v; applyComp(); });
+defToggle('limOn', () => state.limiter.on, v => { state.limiter.on = v; applyLimiter(); });
+defToggle('fbOn', () => state.fb.on, v => { state.fb.on = v; FB.clear(); applyFB(); renderFBList(); });
+defToggle('echo', () => state.dsp.echo, v => { state.dsp.echo = v; });
+defToggle('noise', () => state.dsp.noise, v => { state.dsp.noise = v; });
+defToggle('agc', () => state.dsp.agc, v => { state.dsp.agc = v; });
+defToggle('lowLatency', () => state.lowLatency, v => {
+  state.lowLatency = v;
+  toast('Reinicie o microfone (APLICAR) para usar o novo modo de latência.');
+});
+defToggle('keepAwake', () => state.keepAwake, v => { state.keepAwake = v; applyWakeLock(); });
+
+function setupToggles() {
+  $$('[data-toggle]').forEach(el => {
+    const id = el.dataset.toggle;
+    const t = TOGGLES[id];
+    if (!t) return;
+    el.checked = !!t.get();
+    el.addEventListener('change', () => {
+      t.set(el.checked);
+      syncToggles();
+    });
+  });
+}
+function syncToggles() {
+  $$('[data-toggle]').forEach(el => {
+    const t = TOGGLES[el.dataset.toggle];
+    if (t) el.checked = !!t.get();
+  });
+}
+
+/* =========================================================================
+   7. SETUP DA INTERFACE
+   ========================================================================= */
+function setupControls() {
+  $$('[data-ctrl]').forEach(el => {
+    const id = el.dataset.ctrl;
+    const c = CTRL[id];
+    if (!c) return;
+    el.min = c.min; el.max = c.max; el.step = c.step;
+    el.value = c.get();
+    c.inputs.push(el);
+    const handler = () => {
+      const v = parseFloat(el.value);
+      c.set(v);
+      syncCtrl(id);
+    };
+    el.addEventListener('input', handler);
+    el.addEventListener('change', handler);
+  });
+
+  $$('[data-out]').forEach(el => {
+    const id = el.dataset.out;
+    const c = CTRL[id];
+    if (!c) return;
+    c.outs.push(el);
+    el.textContent = c.fmt(c.get());
+  });
+
+  syncAll();
+}
+
+function setupTabs() {
+  const tabs = $$('.tab');
+  tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      $$('.panel').forEach(p => p.classList.remove('active'));
+      const panel = document.getElementById(t.dataset.panel);
+      if (panel) panel.classList.add('active');
+      eqDirty = true;
+      specDirty = true;
+      setTimeout(fitAllCanvases, 30);
+    });
+  });
+}
+
+function setupButtons() {
+  // MUTE do input
+  const btnMicMute = $('#btnMicMute');
+  const syncMute = () => {
+    btnMicMute.classList.toggle('on', state.mute);
+    btnMicMute.textContent = state.mute ? 'MUTED' : 'MUTE';
+  };
+  btnMicMute.addEventListener('click', () => { state.mute = !state.mute; applyGain(); syncMute(); });
+  syncMute();
+
+  // MUTE do master (dois botões)
+  const syncMM = () => {
+    ['#btnMasterMute', '#btnMasterMute2'].forEach(sel => {
+      const b = $(sel);
+      if (b) { b.classList.toggle('on', state.master.mute); b.textContent = state.master.mute ? 'MUTED' : 'MUTE'; }
+    });
+  };
+  ['#btnMasterMute', '#btnMasterMute2'].forEach(sel => {
+    const b = $(sel);
+    if (b) b.addEventListener('click', () => { state.master.mute = !state.master.mute; applyMaster(); syncMM(); });
+  });
+  syncMM();
+
+  // Ações genéricas
+  $$('[data-action]').forEach(b => {
+    b.addEventListener('click', () => doAction(b.dataset.action));
+  });
+
+  // Presets de HPF
+  $$('[data-hpf]').forEach(b => {
+    b.addEventListener('click', () => {
+      state.hpf.freq = clamp(parseFloat(b.dataset.hpf), 20, 300);
+      state.hpf.on = true;
+      applyHPF(); syncCtrl('hpfFreq'); syncToggles();
+      $$('[data-hpf]').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+
+  // Presets de gate
+  $$('[data-gatepreset]').forEach(b => {
+    b.addEventListener('click', () => {
+      const p = b.dataset.gatepreset;
+      const presets = {
+        vocal:  { on: true, threshold: -50, attack: 5,  hold: 120, release: 180, range: -60 },
+        speech: { on: true, threshold: -45, attack: 3,  hold: 150, release: 220, range: -50 },
+        tight:  { on: true, threshold: -38, attack: 1,  hold: 60,  release: 100, range: -70 }
+      };
+      Object.assign(state.gate, presets[p] || presets.vocal);
+      applyGate(); syncAll(); syncToggles();
+    });
+  });
+
+  // Presets de compressor
+  $$('[data-comppreset]').forEach(b => {
+    b.addEventListener('click', () => {
+      const p = b.dataset.comppreset;
+      const presets = {
+        light:     { on: true, threshold: -22, ratio: 2.5, attack: 15, release: 250, makeup: 2,  knee: 12 },
+        speech:    { on: true, threshold: -26, ratio: 4,   attack: 8,  release: 180, makeup: 4,  knee: 8  },
+        preaching: { on: true, threshold: -24, ratio: 5,   attack: 6,  release: 200, makeup: 5,  knee: 6  },
+        strong:    { on: true, threshold: -30, ratio: 8,   attack: 3,  release: 150, makeup: 8,  knee: 4  }
+      };
+      Object.assign(state.comp, presets[p] || presets.light);
+      applyComp(); syncAll(); syncToggles();
+    });
+  });
+
+  // Preset de EQ
+  const eqSel = $('#eqPresetSelect');
+  if (eqSel) {
+    eqSel.addEventListener('change', () => {
+      const p = eqSel.value;
+      if (p) { applyEqPreset(p); eqSel.value = ''; }
+    });
+  }
+
+  // Start
+  $('#btnStart').addEventListener('click', startApp);
+
+  // Reconexão automática ao voltar para a aba
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && AE.ctx && AE.ctx.state === 'suspended') {
+      AE.ctx.resume().then(updateSettingsPanel).catch(() => {});
+    }
+    if (!document.hidden && state.keepAwake) applyWakeLock();
+  });
+
+  window.addEventListener('resize', () => { eqDirty = true; specDirty = true; fitAllCanvases(); });
+  window.addEventListener('orientationchange', () => { setTimeout(() => { eqDirty = true; fitAllCanvases(); }, 250); });
+}
+
+function doAction(action) {
+  switch (action) {
+    case 'resetGain':
+      state.gain = 0; applyGain(); syncCtrl('gain'); break;
+    case 'eqFlat':
+      state.eq.bands.forEach(b => { b.gain = 0; });
+      applyEQ(); syncAll(); break;
+    case 'eqReset':
+      state.eq.bands[0] = { on: true, freq: 120,  gain: 0, q: 0.7 };
+      state.eq.bands[1] = { on: true, freq: 500,  gain: 0, q: 1.0 };
+      state.eq.bands[2] = { on: true, freq: 2500, gain: 0, q: 1.0 };
+      state.eq.bands[3] = { on: true, freq: 8000, gain: 0, q: 0.7 };
+      state.eq.on = true;
+      applyEQ(); syncAll(); syncToggles(); break;
+    case 'eqResetQ':
+      state.eq.bands[0].q = 0.7; state.eq.bands[1].q = 1.0;
+      state.eq.bands[2].q = 1.0; state.eq.bands[3].q = 0.7;
+      applyEQ(); syncAll(); break;
+    case 'fbClear':
+      FB.clear(); applyFB(); renderFBList(); break;
+    case 'applyMic':
+      restartMic(); break;
+    case 'presetLoad': presetLoad(); break;
+    case 'presetSave': presetSave(); break;
+    case 'presetDelete': presetDelete(); break;
+  }
+}
+
+async function restartMic() {
+  if (!AE.running) { toast('Inicie o microfone primeiro.', 'err'); return; }
+  try {
+    toast('Reiniciando o microfone…');
+    await openMic();
+    toast('Microfone reiniciado.', 'ok');
+    updateSettingsPanel();
+  } catch (err) {
+    handleError(err);
+  }
+}
+
+/* =========================================================================
+   8. ANALISADORES / METERS
+   ========================================================================= */
+const BUF_PRE  = new Float32Array(1024);
+const BUF_POST = new Float32Array(2048);
+const BUF_OUT  = new Float32Array(1024);
+
+const meterState = {
+  in:   { hold: -60, clipUntil: 0, db: -60 },
+  pre:  { hold: -60, clipUntil: 0, db: -60 },
+  post: { hold: -60, clipUntil: 0, db: -60 },
+  out:  { hold: -60, clipUntil: 0, db: -60 }
+};
+
+const meterPct = db => clamp((db + 60) / 60, 0, 1) * 100;
+
+function readLevel(analyser, buf) {
+  if (!analyser) return -100;
+  try {
+    analyser.getFloatTimeDomainData(buf);
+  } catch (e) { return -100; }
+  let peak = 0;
+  for (let i = 0; i < buf.length; i++) {
+    const a = Math.abs(buf[i]);
+    if (a > peak) peak = a;
+  }
+  return linToDb(peak);
+}
+
+function renderMeter(st, fillEl, peakEl, clipLed, db) {
+  if (!fillEl) return;
+  const pct = meterPct(db);
+  fillEl.style.width = pct + '%';
+  fillEl.style.setProperty('--mws', (100 / Math.max(pct, 1) * 100) + '%');
+
+  // Peak Hold com decaimento suave
+  if (db > st.hold) st.hold = db;
+  else st.hold -= 0.45;
+  if (st.hold < -60) st.hold = -60;
+
+  if (peakEl) {
+    const hp = meterPct(st.hold);
+    peakEl.style.left = hp + '%';
+    peakEl.style.opacity = st.hold > -59.5 ? '1' : '0';
+  }
+
+  // Clipping
+  const t = performance.now();
+  if (db >= -0.1) st.clipUntil = t + 1300;
+  if (clipLed) {
+    const on = t < st.clipUntil;
+    clipLed.classList.toggle('on', on);
+  }
+}
+
+function updateMeters() {
+  const N = AE.nodes;
+  if (!AE.running) return;
+
+  const dbPre  = readLevel(N.preAnalyser, BUF_PRE);
+  const dbPost = readLevel(N.postAnalyser, BUF_POST);
+  const dbOut  = readLevel(N.outAnalyser, BUF_OUT);
+
+  meterState.pre.db  = dbPre;
+  meterState.post.db = dbPost;
+  meterState.out.db  = dbOut;
+  meterState.in.db   = dbPost;
+
+  renderMeter(meterState.in,   $('#inFill'),   $('#inPeak'),   $('#inClipLed'),   dbPost);
+  renderMeter(meterState.pre,  $('#preFill'),  $('#prePeak'),  null,              dbPre);
+  renderMeter(meterState.post, $('#postFill'), $('#postPeak'), null,              dbPost);
+  renderMeter(meterState.out,  $('#outFill'),  $('#outPeak'),  $('#outClipLed'),  dbOut);
+  renderMeter(meterState.out,  $('#outFill2'), $('#outPeak2'), $('#outClipLed2'), dbOut);
+
+  const t = $('#inDbTxt');
+  if (t) t.textContent = (dbPost <= -59.9 ? '-60.0' : dbPost.toFixed(1)) + ' dB';
+
+  // Gate GR
+  const gr = AE.workletOK ? gateUI.gr : gateUI.fallbackGr;
+  const isOpen = AE.workletOK ? gateUI.open : gateUI.fallbackOpen;
+  const gateOn = state.gate.on;
+
+  const gs = $('#gateStatus');
+  if (gs) {
+    if (!gateOn) { gs.textContent = 'GATE BYPASS'; gs.className = 'badge off'; }
+    else if (isOpen) { gs.textContent = 'GATE OPEN'; gs.className = 'badge open'; }
+    else { gs.textContent = 'GATE CLOSED'; gs.className = 'badge closed'; }
+  }
+  const grTxt = $('#gateGrTxt');
+  if (grTxt) grTxt.textContent = gr.toFixed(1) + ' dB';
+  const grFill = $('#gateGrFill');
+  if (grFill) grFill.style.width = clamp((-gr / 60) * 100, 0, 100) + '%';
+
+  // Compressor GR
+  if (N.comp) {
+    compUI.gr = clamp(N.comp.reduction || 0, -60, 0);
+  }
+  const cg = $('#compGrTxt');
+  if (cg) cg.textContent = compUI.gr.toFixed(1) + ' dB';
+  const cf = $('#compGrFill');
+  if (cf) cf.style.width = clamp((-compUI.gr / 30) * 100, 0, 100) + '%';
+
+  // Limiter GR
+  const lg = $('#limGrTxt');
+  if (lg) lg.textContent = limUI.gr.toFixed(1) + ' dB';
+  const lf = $('#limGrFill');
+  if (lf) lf.style.width = clamp((-limUI.gr / 20) * 100, 0, 100) + '%';
+
+  updateChips();
+}
+
+let chipTick = 0;
+function updateChips() {
+  if (chipTick++ % 8 !== 0) return;
+  const chipMic = $('#chipMic');
+  const chipOut = $('#chipOut');
+  const chipMaster = $('#chipMaster');
+  const chipCtx = $('#chipCtx');
+
+  if (AE.running && AE.track && AE.track.readyState === 'live') {
+    chipMic.textContent = state.mute ? '🎤 MIC MUTED' : '🎤 MIC LIVE';
+    chipMic.className = 'chip ' + (state.mute ? 'warn' : 'on');
+  } else {
+    chipMic.textContent = '🎤 MIC OFF';
+    chipMic.className = 'chip';
+  }
+
+  chipOut.textContent = '🔵 ' + (AE.outputLabel || 'OUTPUT');
+  chipOut.className = 'chip live';
+
+  chipMaster.textContent = '🔊 ' + (state.master.mute ? 'MUTED' : fmtDb(state.master.gain));
+  chipMaster.className = 'chip ' + (state.master.mute ? 'warn' : '');
+
+  if (AE.ctx) {
+    const s = AE.ctx.state;
+    chipCtx.textContent = s === 'running' ? '▶ RUNNING' : (s === 'suspended' ? '⏸ SUSPENDED' : '⏹ ' + s.toUpperCase());
+    chipCtx.className = 'chip ' + (s === 'running' ? 'on' : 'warn');
+  }
+}
+
+/* =========================================================================
+   9. CANVAS — EQ GRAPH + SPECTRUM
+   ========================================================================= */
+let eqDirty = true;
+let specDirty = true;
+const ctxCache = new WeakMap();
+
+function prep(canvas) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth || 300;
+  const h = canvas.clientHeight || 180;
+  const nw = Math.round(w * dpr), nh = Math.round(h * dpr);
+  if (canvas.width !== nw || canvas.height !== nh) {
+    canvas.width = nw; canvas.height = nh;
+  }
+  let c = ctxCache.get(canvas);
+  if (!c) { c = canvas.getContext('2d'); ctxCache.set(canvas, c); }
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { c, w, h };
+}
+
+function fitAllCanvases() {
+  const eq = $('#eqCanvas'); if (eq) prep(eq);
+  const sp = $('#specCanvas'); if (sp) prep(sp);
+  eqDirty = true;
+}
+
+/* ---------- EQ ---------- */
+const EQ_FREQS = (() => {
+  const arr = new Float32Array(220);
+  const fmin = 20, fmax = 20000;
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = fmin * Math.pow(fmax / fmin, i / (arr.length - 1));
+  }
+  return arr;
+})();
+
+const eqFreqX = f => Math.log10(f / 20) / Math.log10(20000 / 20);
+const eqGainY = g => 1 - (g + 18) / 36; // +18 dB no topo, -18 dB embaixo
+
+function computeEqCurve() {
+  const N = AE.nodes;
+  const mags = new Float32Array(EQ_FREQS.length).fill(1);
+  const tmpM = new Float32Array(EQ_FREQS.length);
+  const tmpP = new Float32Array(EQ_FREQS.length);
+  const list = [];
+  if (N.hpf) list.push(N.hpf);
+  if (N.eq) N.eq.forEach(f => { if (f) list.push(f); });
+  if (N.fb) N.fb.forEach(f => { if (f) list.push(f); });
+
+  for (const f of list) {
+    try {
+      f.getFrequencyResponse(EQ_FREQS, tmpM, tmpP);
+      for (let i = 0; i < mags.length; i++) mags[i] *= tmpM[i];
+    } catch (e) { /* ignora */ }
+  }
+  return mags;
+}
+
+const BAND_COLORS = ['#f87171', '#fbbf24', '#34d399', '#38bdf8'];
+
+function drawEQGraph() {
+  const canvas = $('#eqCanvas');
+  if (!canvas || canvas.clientWidth === 0) return;
+  const { c, w, h } = prep(canvas);
+
+  c.clearRect(0, 0, w, h);
+
+  // Grid
+  const gridFreqs = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
+  c.strokeStyle = '#1a2331';
+  c.lineWidth = 1;
+  c.font = '9px system-ui, sans-serif';
+  c.fillStyle = '#4b5b70';
+  c.textAlign = 'center';
+  gridFreqs.forEach(f => {
+    const x = eqFreqX(f) * w;
+    c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke();
+    c.fillText(f >= 1000 ? (f / 1000) + 'k' : String(f), x, h - 3);
+  });
+
+  const dbLines = [12, 6, 0, -6, -12];
+  dbLines.forEach(dbg => {
+    const y = eqGainY(dbg) * h;
+    c.strokeStyle = dbg === 0 ? '#2e3d52' : '#161e2b';
+    c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+    c.fillStyle = '#4b5b70';
+    c.textAlign = 'left';
+    c.fillText((dbg > 0 ? '+' : '') + dbg, 3, y - 3);
+  });
+
+  // Curva
+  const mags = computeEqCurve();
+  c.beginPath();
+  for (let i = 0; i < EQ_FREQS.length; i++) {
+    const x = eqFreqX(EQ_FREQS[i]) * w;
+    const db = 20 * Math.log10(Math.max(mags[i], 1e-5));
+    const y = clamp(eqGainY(db), -2, h + 2);
+    if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+  }
+  const grad = c.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgba(56,189,248,.35)');
+  grad.addColorStop(1, 'rgba(56,189,248,.02)');
+  c.lineTo(w, h); c.lineTo(0, h); c.closePath();
+  c.fillStyle = grad; c.fill();
+
+  c.beginPath();
+  for (let i = 0; i < EQ_FREQS.length; i++) {
+    const x = eqFreqX(EQ_FREQS[i]) * w;
+    const db = 20 * Math.log10(Math.max(mags[i], 1e-5));
+    const y = clamp(eqGainY(db), -2, h + 2);
+    if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+  }
+  c.strokeStyle = state.eq.on ? '#38bdf8' : '#475569';
+  c.lineWidth = 2;
+  c.stroke();
+
+  // Handles das bandas
+  state.eq.bands.forEach((b, i) => {
+    const x = eqFreqX(clamp(b.freq, 20, 20000)) * w;
+    const y = clamp(eqGainY(state.eq.on && b.on ? b.gain : 0), 0, h);
+    c.beginPath();
+    c.arc(x, y, 9, 0, Math.PI * 2);
+    c.fillStyle = (state.eq.on && b.on) ? BAND_COLORS[i] : '#334155';
+    c.globalAlpha = 0.9; c.fill(); c.globalAlpha = 1;
+    c.lineWidth = 2; c.strokeStyle = '#0a0d12'; c.stroke();
+    c.fillStyle = '#0a0d12';
+    c.font = 'bold 9px system-ui, sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(String(i + 1), x, y + 0.5);
+    c.textBaseline = 'alphabetic';
+  });
+}
+
+/* Interação por toque no EQ */
+let eqDrag = -1;
+function setupEqInteraction() {
+  const canvas = $('#eqCanvas');
+  if (!canvas) return;
+
+  const posFromEvent = (ev) => {
+    const r = canvas.getBoundingClientRect();
+    const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+    const cy = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
+    return { x: clamp(cx, 0, r.width), y: clamp(cy, 0, r.height), w: r.width, h: r.height };
+  };
+
+  const pickBand = (px, pw) => {
+    const fx = px / pw;
+    let best = 0, bestD = Infinity;
+    state.eq.bands.forEach((b, i) => {
+      const bx = eqFreqX(clamp(b.freq, 20, 20000));
+      const d = Math.abs(bx - fx);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    return best;
+  };
+
+  const apply = (ev) => {
+    if (eqDrag < 0) return;
+    ev.preventDefault();
+    const p = posFromEvent(ev);
+    const fx = clamp(p.x / p.w, 0, 1);
+    const freq = 20 * Math.pow(1000, fx); // 20 Hz → 20 kHz
+    const gy = clamp(1 - p.y / p.h, 0, 1);
+    const gain = clamp(gy * 36 - 18, -15, 15);
+    const b = state.eq.bands[eqDrag];
+    b.freq = clamp(freq, 20, 20000);
+    b.gain = gain;
+    applyEQ();
+    syncCtrl('eqFreq' + eqDrag);
+    syncCtrl('eqGain' + eqDrag);
+  };
+
+  const down = (ev) => {
+    const p = posFromEvent(ev);
+    eqDrag = pickBand(p.x, p.w);
+    apply(ev);
+  };
+  const up = () => { eqDrag = -1; };
+
+  canvas.addEventListener('touchstart', down, { passive: false });
+  canvas.addEventListener('touchmove', apply, { passive: false });
+  canvas.addEventListener('touchend', up);
+  canvas.addEventListener('touchcancel', up);
+  canvas.addEventListener('mousedown', down);
+  window.addEventListener('mousemove', apply);
+  window.addEventListener('mouseup', up);
+}
+
+/* ---------- SPECTRUM ---------- */
+let specData = null;
+function drawSpectrum() {
+  const canvas = $('#specCanvas');
+  if (!canvas || canvas.clientWidth === 0) return;
+  const N = AE.nodes;
+  const { c, w, h } = prep(canvas);
+
+  c.clearRect(0, 0, w, h);
+  c.fillStyle = '#080c12';
+  c.fillRect(0, 0, w, h);
+
+  if (!N.outAnalyser || !AE.running) {
+    c.fillStyle = '#334155';
+    c.font = '11px system-ui, sans-serif';
+    c.textAlign = 'center';
+    c.fillText('aguardando áudio…', w / 2, h / 2);
+    return;
+  }
+
+  const bins = N.outAnalyser.frequencyBinCount;
+  if (!specData || specData.length !== bins) specData = new Uint8Array(bins);
+  N.outAnalyser.getByteFrequencyData(specData);
+
+  const nyq = AE.ctx.sampleRate / 2;
+  const binHz = nyq / bins;
+  const fMin = 20, fMax = 20000;
+
+  // Grade
+  c.strokeStyle = '#131b26';
+  c.lineWidth = 1;
+  [100, 1000, 10000].forEach(f => {
+    const x = (Math.log10(f / fMin) / Math.log10(fMax / fMin)) * w;
+    c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke();
+    c.fillStyle = '#3d4a5e';
+    c.font = '9px system-ui, sans-serif';
+    c.textAlign = 'left';
+    c.fillText(f >= 1000 ? (f / 1000) + 'k' : String(f), x + 3, h - 4);
+  });
+  // Linhas de dB
+  [0.25, 0.5, 0.75].forEach(p => {
+    const y = h * p;
+    c.strokeStyle = '#0f1620';
+    c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+  });
+
+  const barCount = Math.max(28, Math.floor(w / 6));
+  const barW = w / barCount;
+  const grad = c.createLinearGradient(0, h, 0, 0);
+  grad.addColorStop(0, '#0ea5e9');
+  grad.addColorStop(0.55, '#34d399');
+  grad.addColorStop(0.8, '#fbbf24');
+  grad.addColorStop(1, '#f87171');
+  c.fillStyle = grad;
+
+  for (let i = 0; i < barCount; i++) {
+    const f0 = fMin * Math.pow(fMax / fMin, i / barCount);
+    const f1 = fMin * Math.pow(fMax / fMin, (i + 1) / barCount);
+    let b0 = Math.floor(f0 / binHz);
+    let b1 = Math.ceil(f1 / binHz);
+    b0 = clamp(b0, 0, bins - 1);
+    b1 = clamp(b1, b0 + 1, bins);
+
+    let v = 0;
+    for (let b = b0; b < b1; b++) if (specData[b] > v) v = specData[b];
+
+    const bh = (v / 255) * (h - 14);
+    const x = i * barW;
+    if (bh > 0.5) c.fillRect(x + 0.5, h - bh, Math.max(barW - 1.5, 1), bh);
+  }
+}
+
+/* =========================================================================
+   10. FEEDBACK REDUCTION
+   -------------------------------------------------------------------------
+   Estratégia (conservadora por natureza):
+   - Analisa a FFT do sinal pós-ganho (~8x/s).
+   - Procura picos ESTREITOS: bin atual > média local (±10 bins) + margem,
+     e com nível absoluto acima de um piso.
+   - Exige PERSISTÊNCIA: o mesmo bin precisa aparecer em N quadros seguidos.
+   - Só então aloca um filtro peaking (largura Q controlada) com profundidade
+     limitada. Filtros sem detecção por ~5 s são liberados.
+   Limitação: é um detector heurístico, não um supressor profissional.
+   ========================================================================= */
+const FB = {
+  freqData: null,
+  cand: new Map(),   // binIndex -> {count, lastSeen}
+  slots: [],         // {freq, active, misses, bin}
+  frame: 0
+};
+
+// Inicializa os 12 slots (espelham os nós criados em buildGraph)
+for (let i = 0; i < 12; i++) {
+  FB.slots.push({ freq: 1000, active: false, misses: 0, bin: -1 });
+}
+
+FB.clear = function () {
+  this.slots.forEach((s, i) => {
+    s.active = false; s.misses = 0; s.bin = -1; s.freq = 1000;
+    const N = AE.nodes;
+    if (N.fb && N.fb[i]) {
+      try { N.fb[i].gain.setTargetAtTime(0, now(), 0.05); } catch (e) {}
+    }
+  });
+  this.cand.clear();
+};
+
+FB.trimSlots = function () {
+  const max = state.fb.maxNotches;
+  // Desativa os slots acima do limite
+  for (let i = max; i < this.slots.length; i++) {
+    const s = this.slots[i];
+    if (s.active) {
+      s.active = false;
+      const N = AE.nodes;
+      if (N.fb && N.fb[i]) {
+        try { N.fb[i].gain.setTargetAtTime(0, now(), 0.05); } catch (e) {}
+      }
+    }
+  }
+};
+
+FB.activeCount = function () {
+  return this.slots.slice(0, state.fb.maxNotches).filter(s => s.active).length;
+};
+
+function detectFeedback() {
+  if (!state.fb.on || !AE.running) return;
+  const N = AE.nodes;
+  if (!N.postAnalyser) return;
+
+  const bins = N.postAnalyser.frequencyBinCount;
+  if (!FB.freqData || FB.freqData.length !== bins) FB.freqData = new Float32Array(bins);
+  N.postAnalyser.getFloatFrequencyData(FB.freqData);
+
+  const sr = AE.ctx.sampleRate;
+  const nyq = sr / 2;
+  const binHz = nyq / bins;
+
+  const sens = clamp(state.fb.sensitivity, 0, 1);
+  // Piso absoluto: alta sensibilidade = piso mais baixo
+  const absFloor = -45 - sens * 30;      // -45 dB .. -75 dB
+  // Proeminência exigida sobre a vizinhança: alta sensibilidade = exigência menor
+  const prom = 16 - sens * 10;           // 16 dB .. 6 dB
+  const WING = 10;
+  const NEED = 7;                        // ~7 quadros (~0.9 s)
+
+  const seen = new Set();
+
+  for (let b = WING; b < bins - WING; b++) {
+    const v = FB.freqData[b];
+    if (!isFinite(v) || v < absFloor) continue;
+    if (v <= FB.freqData[b - 1] || v < FB.freqData[b + 1]) continue; // precisa ser máximo local
+
+    let sum = 0;
+    for (let k = -WING; k <= WING; k++) {
+      if (k === 0) continue;
+      sum += FB.freqData[b + k];
+    }
+    const avg = sum / (WING * 2);
+    if (v - avg < prom) continue;
+
+    seen.add(b);
+    const c = FB.cand.get(b) || { count: 0, last: 0 };
+    c.count++;
+    c.last = performance.now();
+    FB.cand.set(b, c);
+  }
+
+  // Decai candidatos não vistos
+  for (const [b, c] of FB.cand) {
+    if (!seen.has(b)) {
+      c.count -= 1.2;
+      if (c.count <= 0) FB.cand.delete(b);
+    }
+  }
+
+  // Promove candidatos persistentes
+  for (const [b, c] of FB.cand) {
+    if (c.count < NEED) continue;
+    const freq = b * binHz;
+    if (freq < 60 || freq > 16000) continue;
+    FB.assign(freq, b);
+    c.count = NEED; // evita reatribuição constante
+  }
+
+  // Libera filtros que não detectam nada há muito tempo
+  const t = performance.now();
+  FB.slots.forEach((s, i) => {
+    if (!s.active) return;
+    if (s.bin >= 0 && seen.has(s.bin)) { s.misses = 0; return; }
+    s.misses++;
+    if (s.misses > 40) { // ~5 s a 8 Hz
+      s.active = false; s.misses = 0; s.bin = -1;
+      if (N.fb && N.fb[i]) {
+        try { N.fb[i].gain.setTargetAtTime(0, now(), 0.2); } catch (e) {}
+      }
+      FB.cand.delete(s.bin);
+      applyFB();
+      renderFBList();
+    }
+  });
+}
+
+FB.assign = function (freq, bin) {
+  const max = state.fb.maxNotches;
+  const N = AE.nodes;
+  if (!N.fb) return;
+
+  // Já existe filtro próximo? Atualiza.
+  for (let i = 0; i < max; i++) {
+    const s = this.slots[i];
+    if (s.active && Math.abs(s.freq - freq) / freq < 0.05) {
+      s.misses = 0; s.bin = bin; s.freq = freq;
+      try {
+        N.fb[i].frequency.setTargetAtTime(clamp(freq, 30, 18000), now(), 0.03);
+        N.fb[i].Q.setTargetAtTime(clamp(state.fb.q, 1, 30), now(), 0.05);
+        N.fb[i].gain.setTargetAtTime(clamp(state.fb.depth, -18, -3), now(), 0.05);
+      } catch (e) {}
+      renderFBList();
+      return;
+    }
+  }
+
+  // Aloca um slot livre
+  for (let i = 0; i < max; i++) {
+    const s = this.slots[i];
+    if (!s.active) {
+      s.active = true; s.freq = freq; s.bin = bin; s.misses = 0;
+      try {
+        N.fb[i].frequency.setTargetAtTime(clamp(freq, 30, 18000), now(), 0.03);
+        N.fb[i].Q.setTargetAtTime(clamp(state.fb.q, 1, 30), now(), 0.05);
+        N.fb[i].gain.setTargetAtTime(clamp(state.fb.depth, -18, -3), now(), 0.05);
+      } catch (e) {}
+      renderFBList();
+      return;
+    }
+  }
+};
+
+function renderFBList() {
+  const el = $('#fbList');
+  if (!el) return;
+  const max = state.fb.maxNotches;
+  const act = FB.slots.slice(0, max).filter(s => s.active);
+  if (!act.length) {
+    el.textContent = state.fb.on ? 'nenhum filtro ativo' : 'feedback reduction desligado';
+    return;
+  }
+  el.innerHTML = act.map(s =>
+    '<span class="hot">' + fmtHz(s.freq).padEnd(9, ' ') + '</span>   ' + state.fb.depth.toFixed(1) + ' dB   Q ' + state.fb.q.toFixed(1)
+  ).join('\n');
+}
+
+/* =========================================================================
+   11. PRESETS
+   ========================================================================= */
+const LS_KEY = 'wmm_presets_v1';
+
+const BUILTIN_PRESETS = {
+  'DEFAULT': {
+    gain: 0, mute: false,
+    hpf: { on: true, freq: 100 },
+    gate: { on: true, threshold: -48, attack: 5, hold: 100, release: 150, range: -60 },
+    eq: { on: true, bands: [
+      { on: true, freq: 120, gain: 0, q: 0.7 },
+      { on: true, freq: 500, gain: 0, q: 1.0 },
+      { on: true, freq: 2500, gain: 0, q: 1.0 },
+      { on: true, freq: 8000, gain: 0, q: 0.7 }
+    ]},
+    comp: { on: true, threshold: -24, ratio: 3, attack: 10, release: 200, makeup: 0, knee: 10 },
+    limiter: { on: true, threshold: -1, release: 50 },
+    master: { gain: -12, mute: false },
+    fb: { on: false, sensitivity: 0.5, maxNotches: 4, depth: -9, q: 12 }
+  },
+  'CHURCH VOCAL': {
+    gain: 3, mute: false,
+    hpf: { on: true, freq: 110 },
+    gate: { on: true, threshold: -50, attack: 5, hold: 130, release: 200, range: -60 },
+    eq: { on: true, bands: [
+      { on: true, freq: 150, gain: -2.5, q: 0.7 },
+      { on: true, freq: 450, gain: -1.5, q: 1.2 },
+      { on: true, freq: 3000, gain: 2.5, q: 1.0 },
+      { on: true, freq: 9000, gain: 2.5, q: 0.7 }
+    ]},
+    comp: { on: true, threshold: -20, ratio: 3.5, attack: 12, release: 220, makeup: 3, knee: 10 },
+    limiter: { on: true, threshold: -1, release: 60 },
+    master: { gain: -12, mute: false },
+    fb: { on: true, sensitivity: 0.5, maxNotches: 6, depth: -9, q: 12 }
+  },
+  'PREACHING': {
+    gain: 5, mute: false,
+    hpf: { on: true, freq: 120 },
+    gate: { on: true, threshold: -52, attack: 4, hold: 150, release: 220, range: -55 },
+    eq: { on: true, bands: [
+      { on: true, freq: 180, gain: -4, q: 0.8 },
+      { on: true, freq: 400, gain: -2, q: 1.2 },
+      { on: true, freq: 3200, gain: 3, q: 1.0 },
+      { on: true, freq: 8000, gain: 3, q: 0.7 }
+    ]},
+    comp: { on: true, threshold: -22, ratio: 4, attack: 8, release: 180, makeup: 4, knee: 8 },
+    limiter: { on: true, threshold: -1, release: 50 },
+    master: { gain: -12, mute: false },
+    fb: { on: true, sensitivity: 0.55, maxNotches: 8, depth: -10, q: 14 }
+  },
+  'MALE SPEECH': {
+    gain: 2, mute: false,
+    hpf: { on: true, freq: 90 },
+    gate: { on: true, threshold: -48, attack: 5, hold: 110, release: 170, range: -60 },
+    eq: { on: true, bands: [
+      { on: true, freq: 150, gain: -1, q: 0.7 },
+      { on: true, freq: 350, gain: -3, q: 1.2 },
+      { on: true, freq: 2800, gain: 3, q: 1.0 },
+      { on: true, freq: 7500, gain: 2, q: 0.7 }
+    ]},
+    comp: { on: true, threshold: -24, ratio: 3, attack: 10, release: 200, makeup: 2, knee: 10 },
+    limiter: { on: true, threshold: -1, release: 50 },
+    master: { gain: -12, mute: false },
+    fb: { on: false, sensitivity: 0.5, maxNotches: 4, depth: -9, q: 12 }
+  },
+  'FEMALE SPEECH': {
+    gain: 3, mute: false,
+    hpf: { on: true, freq: 120 },
+    gate: { on: true, threshold: -50, attack: 4, hold: 120, release: 180, range: -60 },
+    eq: { on: true, bands: [
+      { on: true, freq: 180, gain: -4, q: 0.8 },
+      { on: true, freq: 500, gain: -2, q: 1.2 },
+      { on: true, freq: 3500, gain: 2.5, q: 1.0 },
+      { on: true, freq: 10000, gain: 3, q: 0.7 }
+    ]},
+    comp: { on: true, threshold: -24, ratio: 3, attack: 10, release: 200, makeup: 3, knee: 10 },
+    limiter: { on: true, threshold: -1, release: 50 },
+    master: { gain: -12, mute: false },
+    fb: { on: false, sensitivity: 0.5, maxNotches: 4, depth: -9, q: 12 }
+  },
+  'PRESENTATION': {
+    gain: 4, mute: false,
+    hpf: { on: true, freq: 110 },
+    gate: { on: true, threshold: -50, attack: 5, hold: 120, release: 180, range: -55 },
+    eq: { on: true, bands: [
+      { on: true, freq: 160, gain: -2, q: 0.7 },
+      { on: true, freq: 400, gain: -2, q: 1.2 },
+      { on: true, freq: 3000, gain: 3, q: 1.0 },
+      { on: true, freq: 8000, gain: 2, q: 0.7 }
+    ]},
+    comp: { on: true, threshold: -20, ratio: 4, attack: 8, release: 190, makeup: 3, knee: 8 },
+    limiter: { on: true, threshold: -1, release: 50 },
+    master: { gain: -12, mute: false },
+    fb: { on: true, sensitivity: 0.5, maxNotches: 6, depth: -9, q: 12 }
+  },
+  'SINGING': {
+    gain: 4, mute: false,
+    hpf: { on: true, freq: 80 },
+    gate: { on: true, threshold: -46, attack: 6, hold: 140, release: 200, range: -60 },
+    eq: { on: true, bands: [
+      { on: true, freq: 150, gain: 1, q: 0.7 },
+      { on: true, freq: 500, gain: -2, q: 1.2 },
+      { on: true, freq: 3000, gain: 2, q: 1.0 },
+      { on: true, freq: 10000, gain: 3, q: 0.7 }
+    ]},
+    comp: { on: true, threshold: -22, ratio: 3, attack: 12, release: 220, makeup: 3, knee: 12 },
+    limiter: { on: true, threshold: -1, release: 60 },
+    master: { gain: -12, mute: false },
+    fb: { on: true, sensitivity: 0.5, maxNotches: 6, depth: -9, q: 12 }
+  }
+};
+
+const EQ_PRESETS = {
+  'VOCAL':       [{freq:150,gain:-2.5,q:0.7},{freq:450,gain:-1.5,q:1.2},{freq:3000,gain:2.5,q:1.0},{freq:9000,gain:2.5,q:0.7}],
+  'MALE VOICE':  [{freq:150,gain:-1.0,q:0.7},{freq:350,gain:-3.0,q:1.2},{freq:2800,gain:3.0,q:1.0},{freq:7500,gain:2.0,q:0.7}],
+  'FEMALE VOICE':[{freq:180,gain:-4.0,q:0.8},{freq:500,gain:-2.0,q:1.2},{freq:3500,gain:2.5,q:1.0},{freq:10000,gain:3.0,q:0.7}],
+  'SPEECH':      [{freq:160,gain:-3.0,q:0.7},{freq:500,gain:-2.5,q:1.4},{freq:3200,gain:3.5,q:1.0},{freq:8000,gain:2.0,q:0.7}],
+  'PREACHING':   [{freq:180,gain:-4.0,q:0.8},{freq:400,gain:-2.0,q:1.2},{freq:3200,gain:3.0,q:1.0},{freq:8000,gain:3.0,q:0.7}],
+  'CHURCH':      [{freq:200,gain:-3.5,q:0.8},{freq:500,gain:-1.5,q:1.2},{freq:2500,gain:2.0,q:1.0},{freq:7000,gain:2.0,q:0.7}],
+  'PRESENTATION':[{freq:170,gain:-2.5,q:0.7},{freq:450,gain:-2.0,q:1.2},{freq:3000,gain:3.0,q:1.0},{freq:8000,gain:2.5,q:0.7}]
+};
+
+function applyEqPreset(name) {
+  const p = EQ_PRESETS[name];
+  if (!p) return;
+  state.eq.on = true;
+  state.eq.bands.forEach((b, i) => {
+    if (!p[i]) return;
+    b.on = true;
+    b.freq = clamp(p[i].freq, 20, 20000);
+    b.gain = clamp(p[i].gain, -15, 15);
+    b.q = clamp(p[i].q, 0.1, 20);
+  });
+  applyEQ(); syncAll(); syncToggles();
+  toast('EQ: ' + name, 'ok');
+}
+
+function getUserPresets() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    return (obj && typeof obj === 'object') ? obj : {};
+  } catch (e) { return {}; }
+}
+function saveUserPresets(obj) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); }
+  catch (e) { toast('Não foi possível salvar (armazenamento cheio).', 'err'); }
+}
+
+function captureState() {
+  return {
+    gain: state.gain, mute: state.mute,
+    hpf: Object.assign({}, state.hpf),
+    gate: Object.assign({}, state.gate),
+    eq: { on: state.eq.on, bands: state.eq.bands.map(b => Object.assign({}, b)) },
+    comp: Object.assign({}, state.comp),
+    limiter: Object.assign({}, state.limiter),
+    master: Object.assign({}, state.master),
+    fb: Object.assign({}, state.fb)
+  };
+}
+
+function applyPresetData(d) {
+  if (!d || typeof d !== 'object') return;
+  if (typeof d.gain === 'number') state.gain = clamp(d.gain, -30, 30);
+  if (typeof d.mute === 'boolean') state.mute = d.mute;
+  if (d.hpf) Object.assign(state.hpf, d.hpf);
+  if (d.gate) Object.assign(state.gate, d.gate);
+  if (d.eq) {
+    state.eq.on = !!d.eq.on;
+    if (Array.isArray(d.eq.bands)) {
+      d.eq.bands.forEach((b, i) => { if (state.eq.bands[i]) Object.assign(state.eq.bands[i], b); });
+    }
+  }
+  if (d.comp) Object.assign(state.comp, d.comp);
+  if (d.limiter) Object.assign(state.limiter, d.limiter);
+  if (d.master) Object.assign(state.master, d.master);
+  if (d.fb) Object.assign(state.fb, d.fb);
+
+  // Sanitização — evita NaN/Infinity
+  state.gain = clamp(state.gain, -30, 30);
+  state.hpf.freq = clamp(state.hpf.freq, 20, 300);
+  state.gate.threshold = clamp(state.gate.threshold, -80, 0);
+  state.gate.attack = clamp(state.gate.attack, 0.1, 100);
+  state.gate.hold = clamp(state.gate.hold, 0, 500);
+  state.gate.release = clamp(state.gate.release, 10, 2000);
+  state.gate.range = clamp(state.gate.range, -80, 0);
+  state.eq.bands.forEach(b => {
+    b.freq = clamp(b.freq, 20, 20000);
+    b.gain = clamp(b.gain, -15, 15);
+    b.q = clamp(b.q, 0.1, 20);
+  });
+  state.comp.threshold = clamp(state.comp.threshold, -60, 0);
+  state.comp.ratio = clamp(state.comp.ratio, 1, 20);
+  state.comp.attack = clamp(state.comp.attack, 0.1, 100);
+  state.comp.release = clamp(state.comp.release, 10, 2000);
+  state.comp.makeup = clamp(state.comp.makeup, 0, 24);
+  state.comp.knee = clamp(state.comp.knee, 0, 40);
+  state.limiter.threshold = clamp(state.limiter.threshold, -30, 0);
+  state.limiter.release = clamp(state.limiter.release, 10, 1000);
+  state.master.gain = clamp(state.master.gain, -60, 6);
+  state.fb.sensitivity = clamp(state.fb.sensitivity, 0, 1);
+  state.fb.maxNotches = clamp(state.fb.maxNotches, 1, 12);
+  state.fb.depth = clamp(state.fb.depth, -18, -3);
+  state.fb.q = clamp(state.fb.q, 1, 30);
+
+  applyAll(); syncAll(); syncToggles();
+  FB.trimSlots();
+  renderFBList();
+  updateMasterButtons();
+}
+
+function updateMasterButtons() {
+  ['#btnMasterMute', '#btnMasterMute2'].forEach(sel => {
+    const b = $(sel);
+    if (b) { b.classList.toggle('on', state.master.mute); b.textContent = state.master.mute ? 'MUTED' : 'MUTE'; }
+  });
+  const b = $('#btnMicMute');
+  if (b) { b.classList.toggle('on', state.mute); b.textContent = state.mute ? 'MUTED' : 'MUTE'; }
+}
+
+function refreshPresetSelect() {
+  const sel = $('#presetSelect');
+  if (!sel) return;
+  const user = getUserPresets();
+  sel.innerHTML = '';
+  const og1 = document.createElement('optgroup'); og1.label = 'FÁBRICA';
+  Object.keys(BUILTIN_PRESETS).forEach(n => {
+    const o = document.createElement('option'); o.value = 'B:' + n; o.textContent = n; og1.appendChild(o);
+  });
+  sel.appendChild(og1);
+
+  const names = Object.keys(user);
+  if (names.length) {
+    const og2 = document.createElement('optgroup'); og2.label = 'MEUS PRESETS';
+    names.sort().forEach(n => {
+      const o = document.createElement('option'); o.value = 'U:' + n; o.textContent = n; og2.appendChild(o);
+    });
+    sel.appendChild(og2);
+  }
+}
+
+function presetLoad() {
+  const sel = $('#presetSelect');
+  if (!sel || !sel.value) { toast('Selecione um preset.', 'err'); return; }
+  const [kind, ...rest] = sel.value.split(':');
+  const name = rest.join(':');
+  const data = kind === 'B' ? BUILTIN_PRESETS[name] : getUserPresets()[name];
+  if (!data) { toast('Preset não encontrado.', 'err'); return; }
+  applyPresetData(JSON.parse(JSON.stringify(data)));
+  toast('Preset carregado: ' + name, 'ok');
+}
+
+function presetSave() {
+  const name = prompt('Nome do preset:');
+  if (!name) return;
+  const clean = name.trim().slice(0, 40);
+  if (!clean) return;
+  const user = getUserPresets();
+  user[clean] = captureState();
+  saveUserPresets(user);
+  refreshPresetSelect();
+  const sel = $('#presetSelect');
+  if (sel) sel.value = 'U:' + clean;
+  toast('Preset salvo: ' + clean, 'ok');
+}
+
+function presetDelete() {
+  const sel = $('#presetSelect');
+  if (!sel || !sel.value) return;
+  const [kind, ...rest] = sel.value.split(':');
+  const name = rest.join(':');
+  if (kind !== 'U') { toast('Presets de fábrica não podem ser excluídos.', 'err'); return; }
+  if (!confirm('Excluir o preset "' + name + '"?')) return;
+  const user = getUserPresets();
+  delete user[name];
+  saveUserPresets(user);
+  refreshPresetSelect();
+  toast('Preset excluído.', 'ok');
+}
+
+/* =========================================================================
+   12. SETTINGS / WAKE LOCK / OUTPUT DEVICE
+   ========================================================================= */
+let wakeLock = null;
+async function applyWakeLock() {
+  try {
+    if (state.keepAwake) {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } else {
+        toast('Wake Lock não suportado neste navegador.', 'err');
+        state.keepAwake = false;
+        syncToggles();
+      }
+    } else if (wakeLock) {
+      await wakeLock.release();
+      wakeLock = null;
+    }
+  } catch (e) {
+    console.warn('[WMM] Wake Lock:', e);
+  }
+}
+
+async function detectOutputDevices() {
+  const sel = $('#outDeviceSelect');
+  if (!sel) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+  try {
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const outs = devs.filter(d => d.kind === 'audiooutput');
+
+    // Rótulo exibido no topo
+    const def = outs.find(d => d.deviceId === 'default') || outs[0];
+    AE.outputLabel = def && def.label ? shortenLabel(def.label) : 'Bluetooth / Speaker';
+
+    // Lista para setSinkId
+    const canSink = AE.ctx && typeof AE.ctx.setSinkId === 'function';
+    sel.innerHTML = '<option value="">— automático —</option>';
+    if (canSink && outs.length) {
+      outs.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d.deviceId;
+        o.textContent = d.label || ('Saída ' + (outs.indexOf(d) + 1));
+        sel.appendChild(o);
+      });
+      sel.disabled = false;
+    } else {
+      sel.disabled = true;
+      const o = document.createElement('option');
+      o.textContent = 'setSinkId não suportado — use o Bluetooth do Android';
+      sel.appendChild(o);
+    }
+
+    sel.onchange = async () => {
+      if (!AE.ctx || typeof AE.ctx.setSinkId !== 'function') return;
+      try {
+        await AE.ctx.setSinkId(sel.value || 'default');
+        toast('Saída de áudio alterada.', 'ok');
+        detectOutputDevices();
+      } catch (e) {
+        toast('Não foi possível trocar a saída: ' + e.message, 'err');
+      }
+    };
+  } catch (e) {
+    console.warn('[WMM] enumerateDevices:', e);
+  }
+}
+
+function shortenLabel(l) {
+  const s = String(l).replace(/\s*\(.*?\)\s*/g, ' ').trim();
+  return s.length > 22 ? s.slice(0, 21) + '…' : (s || 'Bluetooth / Speaker');
+}
+
+function getBrowserInfo() {
+  const ua = navigator.userAgent;
+  let b = 'Desconhecido';
+  if (/Edg\//.test(ua)) b = 'Microsoft Edge';
+  else if (/OPR\//.test(ua)) b = 'Opera';
+  else if (/Chrome\//.test(ua) && !/Edg|OPR/.test(ua)) b = 'Google Chrome';
+  else if (/Firefox\//.test(ua)) b = 'Firefox';
+  else if (/Safari\//.test(ua) && !/Chrome/.test(ua)) b = 'Safari';
+
+  let os = 'Desconhecido';
+  if (/Android/i.test(ua)) os = 'Android';
+  else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+  else if (/Windows/i.test(ua)) os = 'Windows';
+  else if (/Mac OS X/i.test(ua)) os = 'macOS';
+  else if (/Linux/i.test(ua)) os = 'Linux';
+  return { browser: b, os };
+}
+
+function updateSettingsPanel() {
+  const N = AE.nodes;
+
+  // Contexto
+  $('#iCtxState').textContent = AE.ctx ? AE.ctx.state : '—';
+  $('#iCtxState').className = 'v ' + (AE.ctx && AE.ctx.state === 'running' ? 'ok' : 'mid');
+
+  $('#iSampleRate').textContent = AE.ctx ? AE.ctx.sampleRate + ' Hz' : '—';
+
+  if (AE.ctx && AE.ctx.baseLatency != null) {
+    const base = AE.ctx.baseLatency;
+    $('#iBaseLat').textContent = (base * 1000).toFixed(1) + ' ms';
+    $('#iBuffer').textContent = Math.round(base * AE.ctx.sampleRate) + ' samples';
+    const out = (AE.ctx.outputLatency != null ? AE.ctx.outputLatency : 0);
+    $('#iOutLat').textContent = AE.ctx.outputLatency != null ? (out * 1000).toFixed(1) + ' ms' : 'n/d';
+    $('#iTotalLat').textContent = ((base + out) * 1000).toFixed(1) + ' ms';
+  } else {
+    $('#iBaseLat').textContent = 'n/d';
+    $('#iBuffer').textContent = 'n/d';
+    $('#iOutLat').textContent = 'n/d';
+    $('#iTotalLat').textContent = 'n/d';
+  }
+
+  // Permissão
+  let perm = 'desconhecida';
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'microphone' }).then(p => {
+      const el = $('#iPerm');
+      el.textContent = p.state === 'granted' ? 'granted' : (p.state === 'denied' ? 'denied' : 'prompt');
+      el.className = 'v ' + (p.state === 'granted' ? 'ok' : (p.state === 'denied' ? 'no' : 'mid'));
+    }).catch(() => { $('#iPerm').textContent = 'n/d'; });
+  } else {
+    $('#iPerm').textContent = AE.track ? 'ativa' : 'n/d';
+  }
+
+  // Capacidades
+  const caps = AE.caps;
+  const setCap = (sel, val, supported) => {
+    const el = $(sel);
+    if (!el) return;
+    if (val === undefined || val === null) {
+      el.textContent = supported ? 'SUPPORTED (não ativo)' : 'NOT SUPPORTED';
+      el.className = 'v ' + (supported ? 'mid' : 'no');
+    } else {
+      el.textContent = val ? 'ATIVO' : 'INATIVO';
+      el.className = 'v ' + (val ? 'ok' : 'mid');
+    }
+  };
+
+  if (caps) {
+    setCap('#iEcho', caps.echoCancellation, caps.supportsEcho);
+    setCap('#iNoise', caps.noiseSuppression, caps.supportsNoise);
+    setCap('#iAgc', caps.autoGainControl, caps.supportsAgc);
+    $('#iMicSR').textContent = caps.sampleRate ? caps.sampleRate + ' Hz' : '—';
+    $('#iMicCh').textContent = caps.channelCount != null ? caps.channelCount : '—';
+  }
+
+  const wEl = $('#iWorklet');
+  wEl.textContent = AE.workletOK ? 'ATIVO' : 'FALLBACK (ScriptProcessor)';
+  wEl.className = 'v ' + (AE.workletOK ? 'ok' : 'mid');
+
+  $('#iOutDev').textContent = AE.outputLabel || 'Saída padrão';
+
+  const info = getBrowserInfo();
+  $('#iBrowser').textContent = info.browser;
+  $('#iOS').textContent = info.os;
+}
+
+/* =========================================================================
+   13. ERROR HANDLING
+   ========================================================================= */
+class AppError extends Error {
+  constructor(msg) { super(msg); this.name = 'AppError'; }
+}
+
+function toast(msg, type) {
+  const el = $('#toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.className = 'toast'; }, 3400);
+}
+
+function overlayError(msg) {
+  const el = $('#ovError');
+  if (!el) return;
+  if (msg) { el.textContent = msg; el.classList.add('show'); }
+  else { el.textContent = ''; el.classList.remove('show'); }
+}
+
+function handleError(err) {
+  console.error('[WMM]', err);
+  const msg = (err && err.message) ? err.message : 'Erro inesperado na inicialização.';
+  overlayError(msg);
+  toast(msg, 'err');
+}
+
+window.addEventListener('error', e => {
+  console.error('[WMM] Erro não tratado:', e.error || e.message);
+});
+window.addEventListener('unhandledrejection', e => {
+  console.error('[WMM] Promise rejeitada:', e.reason);
+});
+
+/* =========================================================================
+   14. INICIALIZAÇÃO
+   ========================================================================= */
+async function startApp() {
+  const btn = $('#btnStart');
+  btn.disabled = true;
+  btn.textContent = 'INICIANDO…';
+  overlayError('');
+
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new AppError('Este navegador não suporta captura de áudio. Use o Google Chrome no Android.');
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) throw new AppError('Web Audio API não suportada neste navegador.');
+
+    createContext();
+    if (AE.ctx.state === 'suspended') {
+      await AE.ctx.resume();
+    }
+
+    await loadWorklets();
+    buildGraph();
+    applyAll();
+    await openMic();
+
+    AE.running = true;
+
+    $('#overlay').classList.add('hidden');
+    toast('Microfone ativo. Conecte a caixa Bluetooth pelo Android.', 'ok');
+
+    startLoops();
+    updateSettingsPanel();
+    detectOutputDevices();
+    renderFBList();
+    updateChips();
+
+  } catch (err) {
+    handleError(err);
+    btn.disabled = false;
+    btn.textContent = 'START MICROPHONE';
+  }
+}
+
+/* =========================================================================
+   15. LOOP PRINCIPAL
+   ========================================================================= */
+let rafId = null;
+let lastFbRun = 0;
+let lastSettings = 0;
+
+function startLoops() {
+  if (rafId) return;
+  const loop = (ts) => {
+    rafId = requestAnimationFrame(loop);
+
+    if (!AE.running) return;
+
+    // Meters
+    updateMeters();
+
+    // Spectrum (aba do analisador ou sempre — custo baixo)
+    drawSpectrum();
+
+    // EQ graph (somente quando dirty)
+    if (eqDirty) { drawEQGraph(); eqDirty = false; }
+
+    // Feedback detection ~8x/s
+    if (state.fb.on && ts - lastFbRun > 125) {
+      lastFbRun = ts;
+      try { detectFeedback(); } catch (e) { console.warn(e); }
+    }
+
+    // Painel de settings ~1x/s
+    if (ts - lastSettings > 1000) {
+      lastSettings = ts;
+      if (AE.running) {
+        const s = $('#iCtxState');
+        if (s) {
+          s.textContent = AE.ctx.state;
+          s.className = 'v ' + (AE.ctx.state === 'running' ? 'ok' : 'mid');
+        }
+      }
+    }
+  };
+  rafId = requestAnimationFrame(loop);
+}
+
+/* =========================================================================
+   16. BOOT
+   ========================================================================= */
+(function boot() {
+  try {
+    // Verificação básica de compatibilidade
+    const ok = !!(window.AudioContext || window.webkitAudioContext);
+    if (!ok) {
+      overlayError('Navegador incompatível: Web Audio API não encontrada. Use o Google Chrome no Android.');
+      $('#btnStart').disabled = true;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      overlayError('Este navegador não expõe getUserMedia. Abra o arquivo em uma origem segura (https ou localhost).');
+    }
+    if (!window.isSecureContext && location.protocol === 'file:') {
+      // file:// é tratado como origem segura no Chrome, mas avisamos por segurança
+      console.info('[WMM] Executando via file:// — o Chrome trata file:// como contexto seguro.');
+    }
+
+    setupControls();
+    setupToggles();
+    setupTabs();
+    setupButtons();
+    setupEqInteraction();
+
+    refreshPresetSelect();
+    fitAllCanvases();
+
+    // Estado inicial da UI
+    syncAll();
+    syncToggles();
+    updateSettingsPanel();
+    renderFBList();
+    updateChips();
+
+    // Botões de HPF: destaca o preset inicial se coincidir
+    $$('[data-hpf]').forEach(b => {
+      if (parseFloat(b.dataset.hpf) === state.hpf.freq) b.classList.add('active');
+    });
+
+  } catch (err) {
+    handleError(err);
+  }
+})();
+</script>
+</body>
+</html>
